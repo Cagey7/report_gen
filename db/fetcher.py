@@ -1,6 +1,4 @@
 from datetime import datetime
-from typing import Any, Optional, Union, List
-import psycopg2.extensions
 from db.queries import (
     GET_COUNTRY_GROUPS,
     GET_COUNTRY_MEMBERS,
@@ -12,24 +10,24 @@ from db.queries import (
 )
 
 class TradeDataFetcher:
-    def __init__(self, conn: psycopg2.extensions.connection):
+    def __init__(self, conn):
         self.conn = conn
 
 
-    def execute_query(self, query: str, params: Optional[Union[tuple, list]] = None, one: bool = False) -> Union[Any, List[Any]]:
+    def execute_query(self, query, params=None, one=False):
         with self.conn.cursor() as cursor:
             cursor.execute(query, params or ())
             return cursor.fetchone() if one else cursor.fetchall()
 
 
-    def get_country_list(self, country_or_group: str) -> List[str]:
+    def get_country_list(self, country_or_group):
         groups = [row[0] for row in self.execute_query(GET_COUNTRY_GROUPS)]
         if country_or_group in groups:
             return [row[0] for row in self.execute_query(GET_COUNTRY_MEMBERS, (country_or_group,))]
         return [country_or_group]
 
 
-    def get_max_month(self, region: str, country_list: List[str], year: int) -> List[int]:
+    def get_max_month(self, region, country_list, year):
         row = self.execute_query(GET_MAX_MONTH, (country_list, region, year), one=True)
         month = row[0] if row and row[0] is not None else 0
         
@@ -48,7 +46,7 @@ class TradeDataFetcher:
         return months
 
 
-    def get_tn_ved_list(self, digit: int, category: Optional[str]) -> List[str]:
+    def get_tn_ved_list(self, digit, category):
         if category:
             rows = self.execute_query(GET_TN_VEDS_BY_CATEGORY, (category, digit))
         else:
@@ -56,16 +54,7 @@ class TradeDataFetcher:
         return [row[0] for row in rows]
 
 
-    def fetch_trade_data(
-        self,
-        region: str,
-        country: str,
-        country_list: List[str],
-        year: int,
-        months: List[int],
-        digit: int,
-        tn_veds: List[str]
-    ) -> List[dict]:
+    def fetch_trade_data(self, region, country, country_list, year, months, digit, tn_veds):
         params = (country, country_list, region, year, months, digit, tn_veds)
         rows = self.execute_query(FETCH_TRADE_DATA, params)
 

@@ -2,7 +2,7 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 from db.fetcher import TradeDataFetcher
-
+from tables.table_builder import TradeTableBuilder
 
 def main():
     load_dotenv()
@@ -22,21 +22,26 @@ def main():
     )
 
     tradeDataFetcher = TradeDataFetcher(conn)
+    tradeTableBuilder = TradeTableBuilder()
+
 
     countries = tradeDataFetcher.get_country_list(name_ru)
     months = tradeDataFetcher.get_max_month(region, countries, year)
     tn_veds = tradeDataFetcher.get_tn_ved_list(digit, category)
 
-    data = tradeDataFetcher.fetch_trade_data(region, name_ru, countries, year, months, digit, tn_veds)
+    base_year_data = tradeDataFetcher.fetch_trade_data(region, name_ru, countries, year, months, digit, tn_veds)
+    target_year_data = tradeDataFetcher.fetch_trade_data(region, name_ru, countries, year-1, months, digit, tn_veds)
 
-    total_export_value = sum(item['export_value'] or 0.0 for item in data)
-    total_import_value = sum(item['import_value'] or 0.0 for item in data)
+    import_data = tradeTableBuilder.gen_dict_sum_data("import", base_year_data, target_year_data)
+    export_data = tradeTableBuilder.gen_dict_sum_data("export", base_year_data, target_year_data)
+    print(export_data)
+    print(import_data)
+    # print(year)
+    # print(f"Сумма export_value: {total_export_value:.2f}")
+    # print(f"Сумма import_value: {total_import_value:.2f}")
+    # print(f"TO {total_export_value + total_import_value:.2f}")
 
-    print(year)
-    print(f"Сумма export_value: {total_export_value:.2f}")
-    print(f"Сумма import_value: {total_import_value:.2f}")
-    print(f"TO {total_export_value + total_import_value:.2f}")
-
+    
 
 if __name__ == "__main__":
     main()
