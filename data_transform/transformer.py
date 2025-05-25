@@ -1,4 +1,4 @@
-class TradeTableBuilder:
+class TradeDataTransformer:
     def sort_by_key(self, data, key):
         filtered_data = [x for x in data if x.get(key) is not None]
         return sorted(filtered_data, key=lambda x: x[key], reverse=True)
@@ -45,14 +45,20 @@ class TradeTableBuilder:
             target_year_share = self.calc_share(target_year_value, target_year_sum)
             growth_value = self.calc_growth(base_year_value, target_year_value)
             growth_tons = self.calc_growth(base_year_tons, target_year_tons)
-            growth_units = self.calc_growth(base_year_units, target_year_units) if target_year_units else None
+            growth_units = (
+                self.calc_growth(base_year_units, target_year_units)
+                if base_year_units is not None and target_year_units is not None
+                else None
+            )
 
         else:
-            target_year_value = 0
-            target_year_tons = 0
-            target_year_share = 0
-            growth_value = "new"
-            growth_tons = "new"
+            target_year_value = None
+            target_year_tons = None
+            target_year_share = None
+            growth_value = None
+            growth_tons = None
+            target_year_units = None
+            growth_units = None
             
 
         base_year_share = self.calc_share(base_year_value, base_year_sum)
@@ -76,7 +82,6 @@ class TradeTableBuilder:
 
 
     def gen_dict_sum_data(self, gen_type, base_year_data, target_year_data):
-        print(target_year_data)
         base_year_sum = self.sum_by_key(base_year_data, f"{gen_type}_value")
         target_year_sum = self.sum_by_key(target_year_data, f"{gen_type}_value")
         growth_value = self.calc_growth(base_year_sum, target_year_sum)
@@ -94,6 +99,9 @@ class TradeTableBuilder:
 
         base_year_sum = self.sum_by_key(base_year_data, f"{gen_type}_value")
         target_year_sum = self.sum_by_key(target_year_data, f"{gen_type}_value")
-        for base_year_row in sorted_base_year_data[:5]:
+        for base_year_row in sorted_base_year_data:
+            print(base_year_row)
             new_row = self.build_dict_data(gen_type, base_year_row, target_year_data, base_year_sum, target_year_sum)
             data.append(new_row)
+
+        return data
