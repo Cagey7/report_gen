@@ -44,7 +44,11 @@ class TradeDataTransformer:
 
             target_year_share = self.calc_share(target_year_value, target_year_sum)
             growth_value = self.calc_growth(base_year_value, target_year_value)
-            growth_tons = self.calc_growth(base_year_tons, target_year_tons)
+            growth_tons = (
+                self.calc_growth(base_year_tons, target_year_tons)
+                if base_year_tons is not None and target_year_tons is not None
+                else None
+            )
             growth_units = (
                 self.calc_growth(base_year_units, target_year_units)
                 if base_year_units is not None and target_year_units is not None
@@ -52,8 +56,8 @@ class TradeDataTransformer:
             )
 
         else:
-            target_year_value = None
-            target_year_tons = None
+            target_year_value = 0
+            target_year_tons = 0
             target_year_share = None
             growth_value = None
             growth_tons = None
@@ -62,7 +66,7 @@ class TradeDataTransformer:
             
 
         base_year_share = self.calc_share(base_year_value, base_year_sum)
-        
+        abs_change = target_year_value - base_year_value
         return {
             "tn_ved_name": tn_ved_name,
             "tn_ved_code": tn_ved_code,
@@ -77,7 +81,8 @@ class TradeDataTransformer:
             "base_year_share": base_year_share,
             "growth_value": growth_value,
             "growth_tons": growth_tons,
-            "growth_units": growth_units
+            "growth_units": growth_units,
+            "abs_change": abs_change
         }
 
 
@@ -100,7 +105,6 @@ class TradeDataTransformer:
         base_year_sum = self.sum_by_key(base_year_data, f"{gen_type}_value")
         target_year_sum = self.sum_by_key(target_year_data, f"{gen_type}_value")
         for base_year_row in sorted_base_year_data:
-            print(base_year_row)
             new_row = self.build_dict_data(gen_type, base_year_row, target_year_data, base_year_sum, target_year_sum)
             data.append(new_row)
 
