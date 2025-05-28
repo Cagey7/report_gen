@@ -4,7 +4,7 @@ from data_transform.transformer import TradeDataTransformer
 
 
 class TradeReportContext:
-    def __init__(self, conn, region, country_or_group, year, digit, category, text_size, table_size):
+    def __init__(self, conn, region, country_or_group, year, digit, category, text_size, table_size, exclude_tn_veds):
         self.region = region
         self.country = country_or_group
         self.year = year
@@ -12,7 +12,8 @@ class TradeReportContext:
         self.category = category
         self.text_size = text_size
         self.table_size = table_size
-
+        self.exclude_tn_veds = exclude_tn_veds
+        
         self.fetcher = TradeDataFetcher(conn)
         self.transformer = TradeDataTransformer()
 

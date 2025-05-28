@@ -20,6 +20,9 @@ def main():
     category = os.getenv("CATEGORY") or None
     text_size = int(os.getenv("TEXT_SIZE")) or 7
     table_size = int(os.getenv("TABLE_SIZE")) or 25
+    exclude_raw = os.getenv("EXCLUDE_TN_VEDS") or ""
+    exclude_tn_veds = [item.strip() for item in exclude_raw.split(",") if item.strip()]
+
 
     conn = psycopg2.connect(
         host=os.getenv("DB_HOST"),
@@ -29,7 +32,7 @@ def main():
         password=os.getenv("DB_PASS")
     )
 
-    tradeDataPreparer = TradeDataPreparer(conn, region, country_or_group, year, digit, category, text_size, table_size)
+    tradeDataPreparer = TradeDataPreparer(conn, region, country_or_group, year, digit, category, text_size, table_size, exclude_tn_veds)
     
     data_for_doc = tradeDataPreparer.prepare()
     

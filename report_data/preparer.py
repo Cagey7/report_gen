@@ -12,7 +12,7 @@ from data.month_ranges import month_ranges
 
 
 class TradeDataPreparer:
-    def __init__(self, conn, region, country_or_group, year, digit, category, text_size, table_size):
+    def __init__(self, conn, region, country_or_group, year, digit, category, text_size, table_size, exclude_tn_veds):
         self.conn = conn
         self.region = region
         self.country_or_group = country_or_group
@@ -21,11 +21,11 @@ class TradeDataPreparer:
         self.category = category
         self.text_size = text_size
         self.table_size = table_size
-        
+        self.exclude_tn_veds = exclude_tn_veds
         
 
     def prepare(self):
-        context = TradeReportContext(self.conn, self.region, self.country_or_group, self.year, self.digit, self.category, self.text_size, self.table_size)
+        context = TradeReportContext(self.conn, self.region, self.country_or_group, self.year, self.digit, self.category, self.text_size, self.table_size, self.exclude_tn_veds)
         month = context.month
 
         tableDataPreparer = TableDataPreparer(context)

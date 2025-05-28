@@ -126,6 +126,8 @@ class TextDataPreparer:
             decline_data = sorted(self.context.table_data_export_reverse, key=lambda x: x["abs_change"], reverse=False)
             rows_decline_text = []
             for row in decline_data[:text_size]:
+                if row["tn_ved_code"] in self.context.exclude_tn_veds:
+                    continue
                 result = self.gen_decline_growth_row(row, "decline")
                 if result is not None:
                     rows_decline_text.append(result)
@@ -151,6 +153,8 @@ class TextDataPreparer:
             
             row_main_text = []
             for row in self.context.table_data_export[:text_size]:
+                if row["tn_ved_code"] in self.context.exclude_tn_veds:
+                    continue
                 result = self.gen_summary_row(row)
                 if result is not None:
                     row_main_text.append(result)
@@ -176,6 +180,8 @@ class TextDataPreparer:
             decline_data = sorted(self.context.table_data_import_reverse, key=lambda x: x["abs_change"], reverse=False)
             row_decline_text = []
             for row in decline_data[:text_size]:
+                if row["tn_ved_code"] in self.context.exclude_tn_veds:
+                    continue
                 result = self.gen_decline_growth_row(row, 'decline')
                 if result is not None:
                     row_decline_text.append(result)
@@ -201,6 +207,8 @@ class TextDataPreparer:
 
             row_main_text = []
             for row in self.context.table_data_import[:text_size]:
+                if row["tn_ved_code"] in self.context.exclude_tn_veds:
+                    continue
                 result = self.gen_summary_row(row)
                 if result is not None:
                     row_main_text.append(result)
