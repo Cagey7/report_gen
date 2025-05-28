@@ -6,6 +6,8 @@ from data_transform.transformer import TradeDataTransformer
 from table_data.preparer import TableDataPreparer
 from text_data.preparer import TextDataPreparer
 from context.report_context import TradeReportContext
+from report_data.preparer import TradeDataPreparer
+from document_gen.generator import TradeDocumentGenerator
 
 
 def main():
@@ -17,6 +19,7 @@ def main():
     digit = int(os.getenv("DIGIT"))
     category = os.getenv("CATEGORY") or None
     text_size = int(os.getenv("TEXT_SIZE")) or 7
+    table_size = int(os.getenv("TABLE_SIZE")) or 25
 
     conn = psycopg2.connect(
         host=os.getenv("DB_HOST"),
@@ -26,26 +29,13 @@ def main():
         password=os.getenv("DB_PASS")
     )
 
-    context = TradeReportContext(conn, region, country_or_group, year, digit, category, text_size)
-
-    tableDataPreparer = TableDataPreparer(context)
-    textDataPreparer = TextDataPreparer(context)
-
-    # print(textDataPreparer.gen_summary_text("total"))
-    # print(textDataPreparer.gen_summary_text("export"))
-    # print(textDataPreparer.gen_summary_text("import"))
-    # print(textDataPreparer.gen_text_flow("export"))
-    # print(textDataPreparer.gen_text_flow("import"))
-
-    # print(tableDataPreparer.build_main_table())
-
-    export_table = tableDataPreparer.build_export_import_table("export")
-    import_table = tableDataPreparer.build_export_import_table("import")
-    print(export_table)
-    for row in export_table:
-        print(row)
-    for row in import_table:
-        print(row)
+    tradeDataPreparer = TradeDataPreparer(conn, region, country_or_group, year, digit, category, text_size, table_size)
+    
+    data_for_doc = tradeDataPreparer.prepare()
+    
+    tradeDocumentGenerator = TradeDocumentGenerator(data_for_doc)
+    
+    tradeDocumentGenerator.generate()
 
 
 if __name__ == "__main__":

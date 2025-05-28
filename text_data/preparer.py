@@ -103,7 +103,6 @@ class TextDataPreparer:
                 elif units == "млн.":
                     drop_value = drop_value / 1_000
                     curr_value = curr_value / 1_000
-                print(growth_value)
                 return f"{name} - {self.context.format_percent(growth_value, False)} или на {self.context.smart_round(drop_value)} {units} долл. США (с {self.context.smart_round(curr_value)} до {self.context.smart_round(prev_value)} {units} долл. США)"
 
 

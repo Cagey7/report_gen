@@ -133,7 +133,7 @@ class TableDataPreparer:
 
 
     def build_export_import_table(self, direction):
-        text_size = self.context.text_size
+        table_size = self.context.table_size
         if direction == "import":
             data = self.context.table_data_import
             div = self.context.import_table_divider
@@ -144,7 +144,7 @@ class TableDataPreparer:
             measure = self.context.export_table_measure
         
         table_data = []
-        for i, row in enumerate(data[:text_size]):
+        for i, row in enumerate(data[:table_size]):
             name = f"{i+1}. {row['tn_ved_name']} (код {row['tn_ved_code']} ТНВЭД), {row['measure']}"
             if row["target_year_units"]:
                 target_volume = self.context.smart_round(row["target_year_units"])
