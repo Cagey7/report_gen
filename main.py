@@ -34,10 +34,18 @@ def main():
     # print(textDataPreparer.gen_summary_text("total"))
     # print(textDataPreparer.gen_summary_text("export"))
     # print(textDataPreparer.gen_summary_text("import"))
-    print(textDataPreparer.gen_text_flow("export"))
-    print(textDataPreparer.gen_text_flow("import"))
+    # print(textDataPreparer.gen_text_flow("export"))
+    # print(textDataPreparer.gen_text_flow("import"))
 
     # print(tableDataPreparer.build_main_table())
+
+    export_table = tableDataPreparer.build_export_import_table("export")
+    import_table = tableDataPreparer.build_export_import_table("import")
+    print(export_table)
+    for row in export_table:
+        print(row)
+    for row in import_table:
+        print(row)
 
 
 if __name__ == "__main__":

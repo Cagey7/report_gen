@@ -66,16 +66,7 @@ class TextDataPreparer:
                 return f"{direction_ru} в {region_cases[self.context.region]['винительный']} из {country_cases[self.context.country]['творительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'}, увеличился {self.context.format_percent(percent)} и составил {base_year_sum} {units} долл. США."
             else:
                 return f"{direction_ru} в {region_cases[self.context.region]['винительный']} из {country_cases[self.context.country]['творительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'} составил {base_year_sum} {units} долл. США."
-    
-    def num_converter(self, num):
-        if num >= 1_000_000_000:
-            return num / 1_000_000_000, "трлн."
-        elif num >= 1_000_000:
-            return num / 1_000_000, "млрд."
-        elif num >= 1_000:
-            return num / 1_000, "млн."
-        else:
-            return num, "тыс."
+
 
     def gen_decline_growth_row(self, data, trend):
         if data["abs_change"] < 0:
@@ -88,7 +79,7 @@ class TextDataPreparer:
                 if prev_value == 0:
                     return
                 drop_percent = (math.trunc(drop_value * 10) / 10) / prev_value * 100
-                drop_value, units = self.num_converter(drop_value)
+                drop_value, units = self.context.num_converter(drop_value)
                 if units == "трлн.":
                     curr_value = curr_value / 1_000_000_000
                     prev_value = prev_value / 1_000_000_000
@@ -102,7 +93,7 @@ class TextDataPreparer:
                 return f"{name} - на {self.context.format_percent(drop_percent, False)} или на {self.context.smart_round(drop_value)} {units} долл. США (с {self.context.smart_round(prev_value)} до {self.context.smart_round(curr_value)} {units} долл. США)"
             elif trend == "growth":
                 growth_value = data["growth_value"]
-                prev_value, units = self.num_converter(prev_value)
+                prev_value, units = self.context.num_converter(prev_value)
                 if units == "трлн.":
                     drop_value = drop_value / 1_000_000_000
                     curr_value = curr_value / 1_000_000_000
@@ -112,7 +103,7 @@ class TextDataPreparer:
                 elif units == "млн.":
                     drop_value = drop_value / 1_000
                     curr_value = curr_value / 1_000
-
+                print(growth_value)
                 return f"{name} - {self.context.format_percent(growth_value, False)} или на {self.context.smart_round(drop_value)} {units} долл. США (с {self.context.smart_round(curr_value)} до {self.context.smart_round(prev_value)} {units} долл. США)"
 
 
@@ -120,11 +111,13 @@ class TextDataPreparer:
         name = data["tn_ved_name"].lower()
         value = data["base_year_value"]
         share = data["base_year_share"]
-        formatted_value, units = self.num_converter(value)
+        formatted_value, units = self.context.num_converter(value)
         return f"{name} – {self.context.smart_round(formatted_value)} {units} долл. США (с долей {self.context.format_percent(share, False)})"
 
 
     def gen_text_flow(self, direction):
+        text_size = self.context.text_size
+
         if direction == "export":
             export_text = []
 
@@ -133,7 +126,7 @@ class TextDataPreparer:
 
             decline_data = sorted(self.context.table_data_export_reverse, key=lambda x: x["abs_change"], reverse=False)
             rows_decline_text = []
-            for row in decline_data[:self.context.text_size]:
+            for row in decline_data[:text_size]:
                 result = self.gen_decline_growth_row(row, "decline")
                 if result is not None:
                     rows_decline_text.append(result)
@@ -147,7 +140,7 @@ class TextDataPreparer:
 
             growth_data = sorted(self.context.table_data_export, key=lambda x: x["abs_change"], reverse=False)
             row_growth_text = []
-            for row in growth_data[:self.context.text_size]:
+            for row in growth_data[:text_size]:
                 result = self.gen_decline_growth_row(row, 'growth')
                 if result is not None:
                     row_growth_text.append(result)
@@ -158,7 +151,7 @@ class TextDataPreparer:
             export_text.append(growth_text)
             
             row_main_text = []
-            for row in self.context.table_data_export[:self.context.text_size]:
+            for row in self.context.table_data_export[:text_size]:
                 result = self.gen_summary_row(row)
                 if result is not None:
                     row_main_text.append(result)
@@ -183,7 +176,7 @@ class TextDataPreparer:
 
             decline_data = sorted(self.context.table_data_import_reverse, key=lambda x: x["abs_change"], reverse=False)
             row_decline_text = []
-            for row in decline_data[:self.context.text_size]:
+            for row in decline_data[:text_size]:
                 result = self.gen_decline_growth_row(row, 'decline')
                 if result is not None:
                     row_decline_text.append(result)
@@ -196,7 +189,7 @@ class TextDataPreparer:
             
             growth_data = sorted(self.context.table_data_import, key=lambda x: x["abs_change"], reverse=False)
             row_growth_text = []
-            for row in growth_data[:self.context.text_size]:
+            for row in growth_data[:text_size]:
                 result = self.gen_decline_growth_row(row, 'growth')
                 if result is not None:
                     row_growth_text.append(result)
@@ -208,7 +201,7 @@ class TextDataPreparer:
             import_text.append(growth_text)
 
             row_main_text = []
-            for row in self.context.table_data_import[:self.context.text_size]:
+            for row in self.context.table_data_import[:text_size]:
                 result = self.gen_summary_row(row)
                 if result is not None:
                     row_main_text.append(result)

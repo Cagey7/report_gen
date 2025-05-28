@@ -130,3 +130,49 @@ class TableDataPreparer:
             data.append(product_data)
 
         return data
+
+
+    def build_export_import_table(self, direction):
+        text_size = self.context.text_size
+        if direction == "import":
+            data = self.context.table_data_import
+            div = self.context.import_table_divider
+            measure = self.context.import_table_measure
+        elif direction == "export":
+            data = self.context.table_data_export
+            div = self.context.export_table_divider
+            measure = self.context.export_table_measure
+        
+        table_data = []
+        for i, row in enumerate(data[:text_size]):
+            name = f"{i+1}. {row['tn_ved_name']} (код {row['tn_ved_code']} ТНВЭД), {row['measure']}"
+            if row["target_year_units"]:
+                target_volume = self.context.smart_round(row["target_year_units"])
+            else:
+                target_volume = self.context.smart_round(row["target_year_tons"])
+            
+            target_year_value = self.context.smart_round(row["target_year_value"]/div)
+            target_year_share = self.context.format_percent(row["target_year_share"], False)
+            
+            if row["base_year_units"]:
+                base_volume = self.context.smart_round(row["base_year_units"])
+            else:
+                base_volume = self.context.smart_round(row["base_year_tons"])
+            
+            base_year_value = self.context.smart_round(row["base_year_value"]/div)
+            base_year_share = self.context.format_percent(row["base_year_share"], False)
+            
+            if row["growth_units"]:
+                growth_volume = self.context.format_percent(row["growth_units"])
+            else:
+                growth_volume = self.context.format_percent(row["growth_tons"])
+            if growth_volume == "100%":
+                growth_volume = "new"
+            
+            growth_value = self.context.format_percent(row["growth_value"])
+            if growth_value == "100%":
+                growth_value = "new"
+            row_data = [name, target_volume, target_year_value, target_year_share, base_volume, base_year_value, base_year_share, growth_volume, growth_value]
+            table_data.append(row_data)
+        return table_data
+            

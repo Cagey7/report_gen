@@ -43,7 +43,10 @@ class TradeReportContext:
 
         self.table_divider = self.get_main_table_divider()["divider"]
         self.table_measure = self.get_main_table_divider()["measure"]
-        
+        self.export_table_divider = self.get_export_import_table_divider("export")["divider"]
+        self.import_table_divider = self.get_export_import_table_divider("export")["divider"]
+        self.export_table_measure = self.get_export_import_table_divider("import")["measure"]
+        self.import_table_measure = self.get_export_import_table_divider("import")["measure"]
 
     
     def get_main_table_divider(self):
@@ -63,6 +66,21 @@ class TradeReportContext:
             return self.get_divider(min_value) 
 
 
+    def get_export_import_table_divider(self, direction):
+        if direction == "export":
+            values = [
+                self.export_data_sum["base_year_sum"],
+                self.export_data_sum["target_year_sum"]
+            ]
+        elif direction == "import":
+            values = [
+                self.import_data_sum["base_year_sum"],
+                self.import_data_sum["target_year_sum"]
+            ]
+        max_value = max(values)
+        return self.get_divider(max_value)
+
+
     def get_divider(self, num):
         if num >= 1_000_000_000:
             return {"divider": 1_000_000_000, "measure": "трлн."}
@@ -72,6 +90,17 @@ class TradeReportContext:
             return {"divider": 1_000, "measure": "млн."}
         else:
             return {"divider": 1, "measure": "тыс."}
+
+
+    def num_converter(self, num):
+        if num >= 1_000_000_000:
+            return num / 1_000_000_000, "трлн."
+        elif num >= 1_000_000:
+            return num / 1_000_000, "млрд."
+        elif num >= 1_000:
+            return num / 1_000, "млн."
+        else:
+            return num, "тыс."
 
 
     def smart_round(self, num):
@@ -109,6 +138,10 @@ class TradeReportContext:
 
 
     def format_percent(self, value, with_sign=True):
+        if with_sign and value is None:
+            return "100%"
+        elif not with_sign and value is None:
+            return "+100%"
         rounded = self.round_percent(value)
         abs_value = abs(rounded)
 
