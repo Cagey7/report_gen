@@ -79,7 +79,7 @@ class TradeReportContext:
                 self.import_data_sum["base_year_sum"],
                 self.import_data_sum["target_year_sum"]
             ]
-        max_value = max(values)
+        max_value = max(values)/1000
         return self.get_divider(max_value)
 
 
@@ -106,13 +106,31 @@ class TradeReportContext:
 
 
     def smart_round(self, num):
-        if abs(int(num)) >= 1:
-            return round(num, 1)
         if num == 0:
-            return 0
-        order = int(math.floor(math.log10(abs(num))))
-        decimals = -order
-        return round(num, decimals)
+            rounded = 0
+        elif abs(int(num)) >= 1:
+            rounded = round(num, 1)
+        else:
+            order = int(math.floor(math.log10(abs(num))))
+            decimals = -order
+            rounded = round(num, decimals)
+
+        str_num = str(rounded).replace(".", ",")
+
+        if "," in str_num:
+            int_part, frac_part = str_num.split(",")
+        else:
+            int_part, frac_part = str_num, ""
+
+        try:
+            int_part_with_spaces = "{:,}".format(int(float(int_part))).replace(",", " ")
+        except ValueError:
+            int_part_with_spaces = int_part
+
+        if frac_part == "0" or frac_part == "":
+            return int_part_with_spaces
+        else:
+            return f"{int_part_with_spaces},{frac_part}"
 
 
     def round_percent(self, num):
@@ -141,16 +159,28 @@ class TradeReportContext:
 
     def format_percent(self, value, with_sign=True):
         if with_sign and value is None:
-            return "100%"
+            result = "100%"
         elif not with_sign and value is None:
-            return "+100%"
-        rounded = self.round_percent(value)
-        abs_value = abs(rounded)
-
-        if value <= 0:
-            return f"{abs_value}%" if not with_sign else f"{rounded}%"
-        elif value <= 100:
-            return f"{abs_value}%" if not with_sign else f"+{abs_value}%"
+            result = "+100%"
         else:
-            growth = round(1 + value / 100, 1)
-            return f"рост в {growth} р."
+            rounded = self.round_percent(value)
+            abs_value = abs(rounded)
+
+            if value <= 0:
+                result = f"{abs_value}%" if not with_sign else f"{rounded}%"
+            elif value <= 100:
+                result = f"{abs_value}%" if not with_sign else f"+{abs_value}%"
+            else:
+                growth = round(1 + value / 100, 1)
+                result = f"рост в {growth} р."
+
+        result = result.replace(".", ",")
+
+        result = result.replace(",0%", "%")
+        result = result.replace(",0 р.", " р.")
+        result = result.replace(",0р.", "р.")
+        result = result.replace(",0 р", " р")
+        result = result.replace(",0", "")  # На всякий случай
+
+        return result
+
