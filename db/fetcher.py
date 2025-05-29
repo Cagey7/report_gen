@@ -27,7 +27,7 @@ class TradeDataFetcher:
         return [country_or_group]
 
 
-    def get_max_month(self, region, country_list, year):
+    def get_max_month_list(self, region, country_list, year):
         row = self.execute_query(GET_MAX_MONTH, (country_list, region, year), one=True)
         month = row[0] if row and row[0] is not None else 0
         
@@ -66,3 +66,18 @@ class TradeDataFetcher:
         ]
         results = [dict(zip(columns, row)) for row in rows]
         return results
+
+
+    def is_data_exists(self, country_or_group, region, year, months_range):
+        countries = self.get_country_list(country_or_group)
+        months = self.get_max_month_list(region, countries, year)
+        if months == []:
+            return False
+        else:
+            if months_range == []:
+                return True
+            last_db_month = months[-1]
+            input_month = months_range[-1]
+            if input_month > last_db_month:
+                return False
+            return True

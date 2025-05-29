@@ -2,7 +2,7 @@ import math
 from data.country_cases import country_cases
 from data.region_cases import region_cases
 from data.month_ranges import month_ranges
-
+from utils.validation import format_month_range
 
 class TextDataPreparer:
     def __init__(self, context):
@@ -41,31 +41,31 @@ class TextDataPreparer:
         change = sum_data["growth_value"]
         if direction == "total":
             if change > 0:
-                return f"{direction_ru} между {region_cases[self.context.region]['творительный']} и {country_cases[self.context.country]['творительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'} составил {base_year_sum} {units} долл. США, что на {self.context.format_percent(percent, False)} больше, чем за аналогичный период предыдущего года {target_year_sum} {units} долл. США)."
+                return f"{direction_ru} между {region_cases[self.context.region]['творительный']} и {country_cases[self.context.country]['творительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'} составил {base_year_sum} {units} долл. США, что на {self.context.format_percent(percent, False)} больше, чем за аналогичный период предыдущего года {target_year_sum} {units} долл. США)."
             elif change < 0:
-                return f"{direction_ru} между {region_cases[self.context.region]['творительный']} и {country_cases[self.context.country]['творительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'} составил {base_year_sum} {units} долл. США, что на {self.context.format_percent(percent, False)} ниже, чем за аналогичный период предыдущего года {target_year_sum} {units} долл. США)."
+                return f"{direction_ru} между {region_cases[self.context.region]['творительный']} и {country_cases[self.context.country]['творительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'} составил {base_year_sum} {units} долл. США, что на {self.context.format_percent(percent, False)} ниже, чем за аналогичный период предыдущего года {target_year_sum} {units} долл. США)."
             elif change > 100:
-                return f"{direction_ru} между {region_cases[self.context.region]['творительный']} и {country_cases[self.context.country]['творительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'} составил {base_year_sum} {units} долл. США, увеличился {self.context.format_percent(percent, False)}, чем за аналогичный период предыдущего года {target_year_sum} {units} долл. США)."
+                return f"{direction_ru} между {region_cases[self.context.region]['творительный']} и {country_cases[self.context.country]['творительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'} составил {base_year_sum} {units} долл. США, увеличился {self.context.format_percent(percent, False)}, чем за аналогичный период предыдущего года {target_year_sum} {units} долл. США)."
             else:
-                return f"{direction_ru} между {region_cases[self.context.region]['творительный']} и {country_cases[self.context.country]['творительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'} составил {base_year_sum} {units} долл. США."
+                return f"{direction_ru} между {region_cases[self.context.region]['творительный']} и {country_cases[self.context.country]['творительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'} составил {base_year_sum} {units} долл. США."
         elif direction == "export":
             if change > 0:
-                return f"{direction_ru} из {region_cases[self.context.region]['родительный']} в {country_cases[self.context.country]['винительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'}, вырос на {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+                return f"{direction_ru} из {region_cases[self.context.region]['родительный']} в {country_cases[self.context.country]['винительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'}, вырос на {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
             elif change < 0:
-                return f"{direction_ru} из {region_cases[self.context.region]['родительный']} в {country_cases[self.context.country]['винительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'}, снизнился на {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+                return f"{direction_ru} из {region_cases[self.context.region]['родительный']} в {country_cases[self.context.country]['винительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'}, снизнился на {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
             elif change > 100:
-                return f"{direction_ru} из {region_cases[self.context.region]['родительный']} в {country_cases[self.context.country]['винительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'}, увеличился {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+                return f"{direction_ru} из {region_cases[self.context.region]['родительный']} в {country_cases[self.context.country]['винительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'}, увеличился {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
             else:
-                return f"{direction_ru} из {region_cases[self.context.region]['родительный']} в {country_cases[self.context.country]['винительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'} составил {base_year_sum} {units} долл. США."
+                return f"{direction_ru} из {region_cases[self.context.region]['родительный']} в {country_cases[self.context.country]['винительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'} составил {base_year_sum} {units} долл. США."
         elif direction == "import":
             if change > 0:
-                return f"{direction_ru} в {region_cases[self.context.region]['винительный']} из {country_cases[self.context.country]['творительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'}, вырос на {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+                return f"{direction_ru} в {region_cases[self.context.region]['винительный']} из {country_cases[self.context.country]['творительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'}, вырос на {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
             elif change < 0:
-                return f"{direction_ru} в {region_cases[self.context.region]['винительный']} из {country_cases[self.context.country]['творительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'}, снизнился на {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+                return f"{direction_ru} в {region_cases[self.context.region]['винительный']} из {country_cases[self.context.country]['творительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'}, снизнился на {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
             elif change > 100:
-                return f"{direction_ru} в {region_cases[self.context.region]['винительный']} из {country_cases[self.context.country]['творительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'}, увеличился {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+                return f"{direction_ru} в {region_cases[self.context.region]['винительный']} из {country_cases[self.context.country]['творительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'}, увеличился {self.context.format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
             else:
-                return f"{direction_ru} в {region_cases[self.context.region]['винительный']} из {country_cases[self.context.country]['творительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if month_ranges[self.context.month] == '' else 'года'} составил {base_year_sum} {units} долл. США."
+                return f"{direction_ru} в {region_cases[self.context.region]['винительный']} из {country_cases[self.context.country]['творительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if format_month_range(self.context.months) == '' else 'года'} составил {base_year_sum} {units} долл. США."
 
 
     def gen_decline_growth_row(self, data, trend):
@@ -166,7 +166,7 @@ class TextDataPreparer:
 
             export_text.append(main_text)
 
-            info_text = f"Более подробная информация по основным экспортируемым товарам в {country_cases[self.context.country]['винительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if self.context.month == 12 else 'года'} показана в Таблице №1."
+            info_text = f"Более подробная информация по основным экспортируемым товарам в {country_cases[self.context.country]['винительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if self.context.months[-1] == 12 else 'года'} показана в Таблице №1."
             export_text.append(info_text)
 
             return export_text
@@ -219,7 +219,7 @@ class TextDataPreparer:
             )
             import_text.append(main_text)
 
-            info_text = f"Более подробная информация по основным импортируемым товарам из {country_cases[self.context.country]['родительный']} за {month_ranges[self.context.month]}{self.context.year} {'год' if self.context.month == 12 else 'года'} показана в Таблице №2."
+            info_text = f"Более подробная информация по основным импортируемым товарам из {country_cases[self.context.country]['родительный']} за {format_month_range(self.context.months)}{self.context.year} {'год' if self.context.months[-1] == 12 else 'года'} показана в Таблице №2."
             import_text.append(info_text)
 
             return import_text

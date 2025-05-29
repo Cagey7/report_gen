@@ -8,6 +8,8 @@ from docx.oxml.ns import qn
 from docx.shared import Cm
 from docx.shared import RGBColor
 from data.month_ranges import month_ranges
+from utils.validation import format_month_range
+
 
 class TradeDocumentGenerator:
     def __init__(self, prepared_data):
@@ -32,7 +34,7 @@ class TradeDocumentGenerator:
             doc,
             self.prepared_data["export_header"],
             self.prepared_data["export_table"],
-            self.prepared_data["month"],
+            self.prepared_data["months"],
             self.prepared_data["year"],
             self.prepared_data["export_table_measure"]
         )
@@ -40,7 +42,7 @@ class TradeDocumentGenerator:
             doc,
             self.prepared_data["import_header"],
             self.prepared_data["import_table"],
-            self.prepared_data["month"],
+            self.prepared_data["months"],
             self.prepared_data["year"],
             self.prepared_data["import_table_measure"]
         )
@@ -246,7 +248,7 @@ class TradeDocumentGenerator:
                     run.italic = True
 
 
-    def generate_export_import_table(self, doc, table_header, table_data, month, year, units):
+    def generate_export_import_table(self, doc, table_header, table_data, months, year, units):
         # Удаляем 10-й элемент, если есть
         for row in table_data:
             if len(row) > 9:
@@ -320,7 +322,7 @@ class TradeDocumentGenerator:
         make_bold(cell)
 
         cell = table.cell(0, 1)
-        cell.text = f"{year-1} год" if month == 12 else f"{month_ranges[month]}\n{year-1} {'год' if month == 12 else 'года'}"
+        cell.text = f"{year-1} год" if months[-1] == 12 else f"{format_month_range(months)}\n{year-1} {'год' if months[-1] == 12 else 'года'}"
         merge_cells_horizontally(table, 0, 1, 3)
         for i in range(1, 4):
             set_cell_background(table.cell(0, i))
@@ -328,7 +330,7 @@ class TradeDocumentGenerator:
             make_bold(table.cell(0, i))
 
         cell = table.cell(0, 4)
-        cell.text = f"{year} год" if month == 12 else f"{month_ranges[month]}\n{year} {'год' if month == 12 else 'года'}"
+        cell.text = f"{year} год" if months[-1] == 12 else f"{format_month_range(months)}\n{year} {'год' if months[-1] == 12 else 'года'}"
         merge_cells_horizontally(table, 0, 4, 6)
         for i in range(4, 7):
             set_cell_background(table.cell(0, i))

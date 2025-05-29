@@ -23,6 +23,15 @@ def main():
     exclude_raw = os.getenv("EXCLUDE_TN_VEDS") or ""
     exclude_tn_veds = [item.strip() for item in exclude_raw.split(",") if item.strip()]
 
+    month_range_raw = os.getenv("MONTH_RANGE") or ""
+    parts = [int(m.strip()) for m in month_range_raw.split(",") if m.strip()]
+
+    if len(parts) == 2:
+        month_range = list(range(parts[0], parts[1] + 1))
+    elif len(parts) == 1:
+        month_range = [parts[0]]
+    else:
+        month_range = []
 
     conn = psycopg2.connect(
         host=os.getenv("DB_HOST"),
@@ -32,7 +41,11 @@ def main():
         password=os.getenv("DB_PASS")
     )
 
-    tradeDataPreparer = TradeDataPreparer(conn, region, country_or_group, year, digit, category, text_size, table_size, exclude_tn_veds)
+    tradeDataFetcher = TradeDataFetcher(conn)
+    if not tradeDataFetcher.is_data_exists(country_or_group, region, year, month_range):
+        exit("Данных нет")
+
+    tradeDataPreparer = TradeDataPreparer(conn, region, country_or_group, year, digit, category, text_size, table_size, exclude_tn_veds, month_range)
     
     data_for_doc = tradeDataPreparer.prepare()
     

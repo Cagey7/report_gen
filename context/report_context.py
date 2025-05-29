@@ -4,7 +4,7 @@ from data_transform.transformer import TradeDataTransformer
 
 
 class TradeReportContext:
-    def __init__(self, conn, region, country_or_group, year, digit, category, text_size, table_size, exclude_tn_veds):
+    def __init__(self, conn, region, country_or_group, year, digit, category, text_size, table_size, exclude_tn_veds, month_range):
         self.region = region
         self.country = country_or_group
         self.year = year
@@ -18,7 +18,10 @@ class TradeReportContext:
         self.transformer = TradeDataTransformer()
 
         self.countries = self.fetcher.get_country_list(country_or_group)
-        self.months = self.fetcher.get_max_month(region, self.countries, year)
+        if month_range == []:
+            self.months = self.fetcher.get_max_month_list(region, self.countries, year)
+        else:
+            self.months = month_range
         self.tn_veds = self.fetcher.get_tn_ved_list(digit, category)
         self.month = self.months[-1]
 
@@ -180,7 +183,7 @@ class TradeReportContext:
         result = result.replace(",0 р.", " р.")
         result = result.replace(",0р.", "р.")
         result = result.replace(",0 р", " р")
-        result = result.replace(",0", "")  # На всякий случай
+        result = result.replace(",0", "")
 
         return result
 
