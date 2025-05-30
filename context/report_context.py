@@ -164,7 +164,7 @@ class TradeReportContext:
         if with_sign and value is None:
             result = "100%"
         elif not with_sign and value is None:
-            result = "+100%"
+            result = "-"
         else:
             rounded = self.round_percent(value)
             abs_value = abs(rounded)
@@ -179,11 +179,11 @@ class TradeReportContext:
 
         result = result.replace(".", ",")
 
-        result = result.replace(",0%", "%")
-        result = result.replace(",0 р.", " р.")
-        result = result.replace(",0р.", "р.")
-        result = result.replace(",0 р", " р")
-        result = result.replace(",0", "")
+        # result = result.replace(",0%", "%")
+        # result = result.replace(",0 р.", " р.")
+        # result = result.replace(",0р.", "р.")
+        # result = result.replace(",0 р", " р")
+        # result = result.replace(",0", "")
 
         return result
 

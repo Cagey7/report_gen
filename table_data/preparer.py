@@ -43,11 +43,11 @@ class TableDataPreparer:
             total_row = ["Товарооборот", target_year_sum_total, base_year_sum_total, self.context.format_percent(growth_value_total)]
 
 
-        target_year_sum_export = self.context.smart_round(export_sum["target_year_sum"]/div)
-        base_year_sum_export = self.context.smart_round(export_sum["base_year_sum"]/div)
-        if target_year_sum_export == 0 and base_year_sum_export == 0:
+        if export_sum["target_year_sum"] == 0 and export_sum["base_year_sum"] == 0:
             export_row = ["Экспорт", 0, 0, ""]
         else:
+            target_year_sum_export = self.context.smart_round(export_sum["target_year_sum"]/div)
+            base_year_sum_export = self.context.smart_round(export_sum["base_year_sum"]/div)
             if target_year_sum_export == 0:
                 growth_value_export = "new"
             elif base_year_sum_export == 0:
@@ -59,11 +59,11 @@ class TableDataPreparer:
             export_row = ["Экспорт", target_year_sum_export, base_year_sum_export, self.context.format_percent(growth_value_export)]
 
 
-        target_year_sum_import = self.context.smart_round(import_sum["target_year_sum"]/div)
-        base_year_sum_import = self.context.smart_round(import_sum["base_year_sum"]/div)
-        if target_year_sum_import == 0 and base_year_sum_import == 0:
+        if import_sum["target_year_sum"] == 0 and import_sum["base_year_sum"] == 0:
             import_row = ["Импорт", 0, 0, ""]
         else:
+            target_year_sum_import = self.context.smart_round(import_sum["target_year_sum"]/div)
+            base_year_sum_import = self.context.smart_round(import_sum["base_year_sum"]/div)
             if target_year_sum_import == 0:
                 growth_value_import = "new"
             elif base_year_sum_import == 0:

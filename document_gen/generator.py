@@ -7,7 +7,6 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm
 from docx.shared import RGBColor
-from data.month_ranges import month_ranges
 from utils.validation import format_month_range
 
 
@@ -189,7 +188,9 @@ class TradeDocumentGenerator:
 
 
     def add_import_analysis_text(self, doc, text_blocks):
-        # Отступ перед блоком текста
+        if text_blocks == "":
+            return
+        
         doc.add_paragraph().paragraph_format.space_after = Pt(10)
 
         for i, text in enumerate(text_blocks):
@@ -249,6 +250,8 @@ class TradeDocumentGenerator:
 
 
     def generate_export_import_table(self, doc, table_header, table_data, months, year, units):
+        if len(table_data) == 1:
+            return
         # Удаляем 10-й элемент, если есть
         for row in table_data:
             if len(row) > 9:

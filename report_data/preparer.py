@@ -50,5 +50,5 @@ class TradeDataPreparer:
         data_for_doc["year"] = self.year
         data_for_doc["export_table_measure"] = context.export_table_measure
         data_for_doc["import_table_measure"] = context.import_table_measure
-        data_for_doc["file_name"] = f'Справка по торговле {region_cases[self.region]["родительный"]} с {country_cases[self.country_or_group]["творительный"]} ({format_month_range(months)}{self.year} {"год" if months[-1] == 12 else "года"}).docx'
+        data_for_doc["file_name"] = f'Справка по торговле {region_cases[self.region]["родительный"]} с {country_cases[self.country_or_group]["творительный"]} ({format_month_range(months)}{self.year} {"год" if months[-1] == 12 else "года"}) ({self.category}).docx'
         return data_for_doc

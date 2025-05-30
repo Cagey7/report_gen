@@ -22,7 +22,9 @@ class TradeDataFetcher:
 
     def get_country_list(self, country_or_group):
         groups = [row[0] for row in self.execute_query(GET_COUNTRY_GROUPS)]
+
         if country_or_group in groups:
+            print(country_or_group)
             return [row[0] for row in self.execute_query(GET_COUNTRY_MEMBERS, (country_or_group,))]
         return [country_or_group]
 
@@ -70,6 +72,7 @@ class TradeDataFetcher:
 
     def is_data_exists(self, country_or_group, region, year, months_range):
         countries = self.get_country_list(country_or_group)
+        print(countries)
         months = self.get_max_month_list(region, countries, year)
         if months == []:
             return False

@@ -17,24 +17,19 @@ class TextDataPreparer:
             sum_data = self.context.total_data_sum
             base_year_sum = self.context.smart_round(sum_data["base_year_sum"]/div)
             target_year_sum = self.context.smart_round(sum_data["target_year_sum"]/div)
-            
-            # if base_year_sum == 0 and target_year_sum == 0:
-            #     return ""
-            # elif target_year_sum == 0:
-            #     percent = "100%"
             if base_year_sum == target_year_sum:
                 base_year_sum, target_year_sum = self.context.smart_pair_round(sum_data["base_year_sum"]/div, sum_data["target_year_sum"]/div)
         elif direction == "export":
             direction_ru = "Экспорт"
             sum_data = self.context.export_data_sum
-            base_year_sum = self.context.smart_round(sum_data["base_year_sum"]/div)
-            if base_year_sum == 0:
+            if sum_data["base_year_sum"] == 0 and sum_data["target_year_sum"] == 0:
                 return ""
+            base_year_sum = self.context.smart_round(sum_data["base_year_sum"]/div)
         elif direction == "import":
             direction_ru = "Импорт"
             sum_data = self.context.import_data_sum
             base_year_sum = self.context.smart_round(sum_data["base_year_sum"]/div)
-            if base_year_sum == 0:
+            if sum_data["base_year_sum"] == 0 and sum_data["target_year_sum"] == 0:
                 return ""
 
         percent = sum_data['growth_value']
@@ -89,8 +84,10 @@ class TextDataPreparer:
                 elif units == "млн.":
                     curr_value = curr_value / 1_000
                     prev_value = prev_value / 1_000
-
-                return f"{name} - на {self.context.format_percent(drop_percent, False)} или на {self.context.smart_round(drop_value)} {units} долл. США (с {self.context.smart_round(prev_value)} до {self.context.smart_round(curr_value)} {units} долл. США)"
+                drop_percent_formatted = self.context.format_percent(drop_percent, False)
+                if "-" in drop_percent_formatted:
+                    drop_percent_formatted = "100%"
+                return f"{name} - на {drop_percent_formatted} или на {self.context.smart_round(drop_value)} {units} долл. США (с {self.context.smart_round(prev_value)} до {self.context.smart_round(curr_value)} {units} долл. США)"
             elif trend == "growth":
                 growth_value = data["growth_value"]
                 prev_value, units = self.context.num_converter(prev_value)
@@ -103,7 +100,11 @@ class TextDataPreparer:
                 elif units == "млн.":
                     drop_value = drop_value / 1_000
                     curr_value = curr_value / 1_000
-                return f"{name} - {self.context.format_percent(growth_value, False)} или на {self.context.smart_round(drop_value)} {units} долл. США (с {self.context.smart_round(curr_value)} до {self.context.smart_round(prev_value)} {units} долл. США)"
+                
+                growth_value_formatted = self.context.format_percent(growth_value, False)
+                if "-" in growth_value_formatted:
+                    growth_value_formatted = "100%"
+                return f"{name} - {growth_value_formatted} или на {self.context.smart_round(drop_value)} {units} долл. США (с {self.context.smart_round(curr_value)} до {self.context.smart_round(prev_value)} {units} долл. США)"
 
 
     def gen_summary_row(self, data):
@@ -121,6 +122,8 @@ class TextDataPreparer:
             export_text = []
 
             summary_text = self.gen_summary_text(direction)
+            if summary_text == "":
+                return ""
             export_text.append(summary_text)
 
             decline_data = sorted(self.context.table_data_export_reverse, key=lambda x: x["abs_change"], reverse=False)
@@ -174,7 +177,8 @@ class TextDataPreparer:
         if direction == "import":
             import_text = []
             summary_text = self.gen_summary_text(direction)
-        
+            if summary_text == "":
+                return ""
             import_text.append(summary_text)
 
             decline_data = sorted(self.context.table_data_import_reverse, key=lambda x: x["abs_change"], reverse=False)
