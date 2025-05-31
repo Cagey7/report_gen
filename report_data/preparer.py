@@ -5,10 +5,9 @@ from db.fetcher import TradeDataFetcher
 from data_transform.transformer import TradeDataTransformer
 from table_data.preparer import TableDataPreparer
 from text_data.preparer import TextDataPreparer
-from context.report_context import TradeReportContext
 from data.region_cases import region_cases
 from data.country_cases import country_cases
-from utils.validation import format_month_range
+from utils.utils import *
 
 
 class TradeDataPreparer:
@@ -26,29 +25,168 @@ class TradeDataPreparer:
         
 
     def prepare(self):
-        context = TradeReportContext(self.conn, self.region, self.country_or_group, self.year, self.digit, self.category, self.text_size, self.table_size, self.exclude_tn_veds, self.month_range)
-        months = context.months
+        fetcher = TradeDataFetcher(self.conn)
+        transformer = TradeDataTransformer()
+        countries = fetcher.get_country_list(self.country_or_group)
+        if self.month_range == []:
+            months = fetcher.get_max_month_list(self.region, self.countries, self.year)
+        else:
+            months = self.month_range
+        tn_veds = fetcher.get_tn_ved_list(self.digit, self.category)
+        if self.category:
+            category_text = f", {self.category}"
+        else:
+            category_text = ""
+        month = months[-1]
 
-        tableDataPreparer = TableDataPreparer(context)
-        textDataPreparer = TextDataPreparer(context)
+        tableDataPreparer = TableDataPreparer()
+        textDataPreparer = TextDataPreparer()
+        base_year_data = fetcher.fetch_trade_data(
+            self.region,
+            self.country_or_group,
+            countries,
+            self.year,
+            months,
+            self.digit,
+            tn_veds
+        )
+        target_year_data = fetcher.fetch_trade_data(
+            self.region,
+            self.country_or_group,
+            countries,
+            self.year - 1,
+            months,
+            self.digit,
+            tn_veds
+        )
+        table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
+        table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
+        
+        table_data_import_reverse = transformer.get_table_data("import", target_year_data, base_year_data)
+        table_data_export_reverse = transformer.get_table_data("export", target_year_data, base_year_data)
+
+        import_data_sum = transformer.gen_dict_sum_data("import", base_year_data, target_year_data)
+        export_data_sum = transformer.gen_dict_sum_data("export", base_year_data, target_year_data)
+
+        base_total = export_data_sum["base_year_sum"] + import_data_sum["base_year_sum"]
+        target_total = export_data_sum["target_year_sum"] + import_data_sum["target_year_sum"]
+        growth_total = ((base_total - target_total) / target_total) * 100 if target_total else 0
+        total_data_sum = {
+            "base_year_sum": base_total,
+            "target_year_sum": target_total,
+            "growth_value": growth_total
+        }
 
         data_for_doc = {}
-        data_for_doc["document_header"] = f"Взаимная торговля {region_cases[self.region]['родительный']} с {country_cases[self.country_or_group]['творительный']} за {format_month_range(months)}{self.year} {'год' if months[-1] == 12 else 'года'}"
-        data_for_doc["summary_text"] = textDataPreparer.gen_summary_text("total")
-        data_for_doc["summary_header"] = f"Показатели взаимной торговли {region_cases[self.region]['родительный']} с {country_cases[self.country_or_group]['творительный']}"
-        data_for_doc["summary_table"] = tableDataPreparer.build_main_table()
+        data_for_doc["document_header"] = (
+            f"Взаимная торговля {region_cases[self.region]['родительный']} "
+            f"с {country_cases[self.country_or_group]['творительный']} "
+            f"за {format_month_range(months)}{self.year} "
+            f"{'год' if months[-1] == 12 else 'года'}"
+        )
+
+        values = [
+            import_data_sum["base_year_sum"], 
+            import_data_sum["target_year_sum"], 
+            export_data_sum["base_year_sum"], 
+            export_data_sum["target_year_sum"]
+        ]
+        main_table_divider, main_table_measure = get_main_table_divider(values)
         
-        data_for_doc["import_table"] = tableDataPreparer.build_export_import_table("import")
-        data_for_doc["export_table"] = tableDataPreparer.build_export_import_table("export")
+        data_for_doc["summary_text"] = textDataPreparer.gen_summary_text(
+            "total",
+             self.country_or_group,
+             self.region,
+             self.year,
+             months,
+             total_data_sum,
+             main_table_divider,
+             main_table_measure
+        )
+        data_for_doc["summary_header"] = f"Показатели взаимной торговли {region_cases[self.region]['родительный']} с {country_cases[self.country_or_group]['творительный']}"
+
+        data_for_doc["summary_table"] = tableDataPreparer.build_main_table(
+            self.year,
+            export_data_sum,
+            import_data_sum,
+            total_data_sum,
+            main_table_divider,
+            main_table_measure
+        )
+        
+        import_table_div, import_table_measure = get_export_import_table_divider(
+            [import_data_sum["base_year_sum"],
+            import_data_sum["target_year_sum"]]
+        )
+
+        export_table_div, export_table_measure = get_export_import_table_divider(
+            [export_data_sum["base_year_sum"],
+            export_data_sum["target_year_sum"]]
+        )
+        
+        data_for_doc["import_table"] = tableDataPreparer.build_export_import_table(
+            "import",
+            import_data_sum,
+            table_data_import,
+            self.exclude_tn_veds,
+            self.table_size,
+            import_table_div
+        )
+        
+
+
+        data_for_doc["export_table"] = tableDataPreparer.build_export_import_table(
+            "export",
+            export_data_sum,
+            table_data_export,
+            self.exclude_tn_veds,
+            self.table_size,
+            export_table_div
+        )
+        
         data_for_doc["export_header"] = f"Таблица 1 – Основные товары экспорта {region_cases[self.region]['родительный']} в {country_cases[self.country_or_group]['винительный']}"
         data_for_doc["import_header"] = f"Таблица 2 – Основные товары импорта {region_cases[self.region]['родительный']} из {country_cases[self.country_or_group]['родительный']}"
 
-        data_for_doc["import_text"] = textDataPreparer.gen_text_flow("import")
-        data_for_doc["export_text"] = textDataPreparer.gen_text_flow("export")
+        data_for_doc["import_text"] = textDataPreparer.gen_text_flow(
+            "import",
+            self.year,
+            months,
+            table_data_import,
+            table_data_import_reverse,
+            import_data_sum,
+            self.region,
+            self.country_or_group,
+            self.exclude_tn_veds,
+            self.text_size,
+            main_table_divider,
+            main_table_measure
+        )
+
+        data_for_doc["export_text"] = textDataPreparer.gen_text_flow(
+            "export",
+            self.year,
+            months,
+            table_data_export,
+            table_data_export_reverse,
+            export_data_sum,
+            self.region,
+            self.country_or_group,
+            self.exclude_tn_veds,
+            self.text_size,
+            main_table_divider,
+            main_table_measure
+        )
 
         data_for_doc["months"] = months
         data_for_doc["year"] = self.year
-        data_for_doc["export_table_measure"] = context.export_table_measure
-        data_for_doc["import_table_measure"] = context.import_table_measure
-        data_for_doc["file_name"] = f'Справка по торговле {region_cases[self.region]["родительный"]} с {country_cases[self.country_or_group]["творительный"]} ({format_month_range(months)}{self.year} {"год" if months[-1] == 12 else "года"}) ({self.category}).docx'
+        data_for_doc["export_table_measure"] = export_table_measure
+        data_for_doc["import_table_measure"] = import_table_measure
+        data_for_doc["file_name"] = (
+            f'Справка по торговле '
+            f'{region_cases[self.region]["родительный"]} '
+            f'с {country_cases[self.country_or_group]["творительный"]} '
+            f'({format_month_range(months)}{self.year} '
+            f'{"год" if months[-1] == 12 else "года"}) '
+            f'{category_text}.docx'
+        )
         return data_for_doc

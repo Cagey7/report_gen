@@ -7,7 +7,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm
 from docx.shared import RGBColor
-from utils.validation import format_month_range
+from utils.utils import format_month_range
 
 
 class TradeDocumentGenerator:

@@ -2,10 +2,6 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 from db.fetcher import TradeDataFetcher
-from data_transform.transformer import TradeDataTransformer
-from table_data.preparer import TableDataPreparer
-from text_data.preparer import TextDataPreparer
-from context.report_context import TradeReportContext
 from report_data.preparer import TradeDataPreparer
 from document_gen.generator import TradeDocumentGenerator
 
