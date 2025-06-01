@@ -24,7 +24,6 @@ class TradeDataFetcher:
         groups = [row[0] for row in self.execute_query(GET_COUNTRY_GROUPS)]
 
         if country_or_group in groups:
-            print(country_or_group)
             return [row[0] for row in self.execute_query(GET_COUNTRY_MEMBERS, (country_or_group,))]
         return [country_or_group]
 
@@ -38,17 +37,17 @@ class TradeDataFetcher:
 
         if datetime.now().year != year:
             months = list(range(1, 13))
-        elif len(country_list) > 1 and any(item in country_list for item in self.get_country_list("страны ЕАЭС")):
+        elif len(country_list) > 1 and any(item in country_list for item in self.get_country_list("ЕАЭС")):
             row = self.execute_query(GET_MAX_MONTH_EAEU, (region, year), one=True)
             month = row[0] if row and row[0] is not None else 0
             months = list(range(1, month+1))
         else:
-            months = list(range(1, month+1)) 
+            months = list(range(1, month+1))
 
         return months
 
 
-    def get_tn_ved_list(self, digit, category):
+    def get_tn_ved_list(self, digit, category=None):
         if category:
             rows = self.execute_query(GET_TN_VEDS_BY_CATEGORY, (category, digit))
         else:
@@ -72,7 +71,6 @@ class TradeDataFetcher:
 
     def is_data_exists(self, country_or_group, region, year, months_range):
         countries = self.get_country_list(country_or_group)
-        print(countries)
         months = self.get_max_month_list(region, countries, year)
         if months == []:
             return False

@@ -13,7 +13,7 @@ class TableDataPreparer:
 
         header = [
             f"{units} долл. США",
-            f"{year}",
+            f"{year - 1}",
             f"{year}",
             f"Прирост {year - 1}/{year}"
         ]

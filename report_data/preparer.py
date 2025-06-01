@@ -27,20 +27,59 @@ class TradeDataPreparer:
     def prepare(self):
         fetcher = TradeDataFetcher(self.conn)
         transformer = TradeDataTransformer()
-        countries = fetcher.get_country_list(self.country_or_group)
-        if self.month_range == []:
-            months = fetcher.get_max_month_list(self.region, self.countries, self.year)
-        else:
-            months = self.month_range
-        tn_veds = fetcher.get_tn_ved_list(self.digit, self.category)
-        if self.category:
-            category_text = f", {self.category}"
-        else:
-            category_text = ""
-        month = months[-1]
-
         tableDataPreparer = TableDataPreparer()
         textDataPreparer = TextDataPreparer()
+        countries = fetcher.get_country_list(self.country_or_group)
+            
+        if self.month_range == []:
+            months = fetcher.get_max_month_list(self.region, countries, self.year)
+        else:
+            months = self.month_range
+        
+        if self.category:
+            category_text = f", {self.category}"
+            tn_veds_category = fetcher.get_tn_ved_list(6, self.category)
+            if self.digit == 4:
+                tn_veds = list(set(num[:-2] for num in tn_veds_category))
+            elif self.digit == 6:
+                tn_veds = fetcher.get_tn_ved_list(self.digit, self.category)
+
+            base_year_data_category = fetcher.fetch_trade_data(
+                self.region,
+                self.country_or_group,
+                countries,
+                self.year,
+                months,
+                6,
+                tn_veds_category
+            )
+            target_year_data_category = fetcher.fetch_trade_data(
+                self.region,
+                self.country_or_group,
+                countries,
+                self.year - 1,
+                months,
+                6,
+                tn_veds_category
+            )
+
+            import_data_sum_category = transformer.gen_dict_sum_data("import", base_year_data_category, target_year_data_category)
+            export_data_sum_category = transformer.gen_dict_sum_data("export", base_year_data_category, target_year_data_category)
+
+            base_total_category = export_data_sum_category["base_year_sum"] + import_data_sum_category["base_year_sum"]
+            target_total_category = export_data_sum_category["target_year_sum"] + import_data_sum_category["target_year_sum"]
+            growth_total_category = ((base_total_category - target_total_category) / target_total_category) * 100 if target_total_category else 0
+            total_data_sum_category = {
+                "base_year_sum": base_total_category,
+                "target_year_sum": target_total_category,
+                "growth_value": growth_total_category
+            }
+
+        else:
+            tn_veds = fetcher.get_tn_ved_list(self.digit)
+            category_text = ""
+
+
         base_year_data = fetcher.fetch_trade_data(
             self.region,
             self.country_or_group,
@@ -76,8 +115,17 @@ class TradeDataPreparer:
             "target_year_sum": target_total,
             "growth_value": growth_total
         }
-
+        print(import_data_sum)
+        if self.category:
+            import_data_sum = import_data_sum_category
+            export_data_sum = export_data_sum_category
+            base_total = base_total_category
+            target_total = target_total_category
+            total_data_sum = total_data_sum_category
+        print(import_data_sum)
         data_for_doc = {}
+            
+        
         data_for_doc["document_header"] = (
             f"Взаимная торговля {region_cases[self.region]['родительный']} "
             f"с {country_cases[self.country_or_group]['творительный']} "
@@ -85,13 +133,14 @@ class TradeDataPreparer:
             f"{'год' if months[-1] == 12 else 'года'}"
         )
 
-        values = [
-            import_data_sum["base_year_sum"], 
-            import_data_sum["target_year_sum"], 
-            export_data_sum["base_year_sum"], 
-            export_data_sum["target_year_sum"]
-        ]
-        main_table_divider, main_table_measure = get_main_table_divider(values)
+        main_table_divider, main_table_measure = get_main_table_divider(
+            [
+                import_data_sum["base_year_sum"], 
+                import_data_sum["target_year_sum"], 
+                export_data_sum["base_year_sum"], 
+                export_data_sum["target_year_sum"]
+            ]
+        )
         
         data_for_doc["summary_text"] = textDataPreparer.gen_summary_text(
             "total",
@@ -103,7 +152,12 @@ class TradeDataPreparer:
              main_table_divider,
              main_table_measure
         )
-        data_for_doc["summary_header"] = f"Показатели взаимной торговли {region_cases[self.region]['родительный']} с {country_cases[self.country_or_group]['творительный']}"
+        
+        data_for_doc["summary_header"] = (
+            f"Показатели взаимной торговли "
+            f"{region_cases[self.region]['родительный']} "
+            f"с {country_cases[self.country_or_group]['творительный']}"
+        )
 
         data_for_doc["summary_table"] = tableDataPreparer.build_main_table(
             self.year,
@@ -144,9 +198,17 @@ class TradeDataPreparer:
             export_table_div
         )
         
-        data_for_doc["export_header"] = f"Таблица 1 – Основные товары экспорта {region_cases[self.region]['родительный']} в {country_cases[self.country_or_group]['винительный']}"
-        data_for_doc["import_header"] = f"Таблица 2 – Основные товары импорта {region_cases[self.region]['родительный']} из {country_cases[self.country_or_group]['родительный']}"
+        data_for_doc["export_header"] = (
+            f"Таблица 1 – Основные товары экспорта "
+            f"{region_cases[self.region]['родительный']} "
+            f"в {country_cases[self.country_or_group]['винительный']}"
+        )
 
+        data_for_doc["import_header"] = (
+            f"Таблица 2 – Основные товары импорта "
+            f"{region_cases[self.region]['родительный']} "
+            f"из {country_cases[self.country_or_group]['родительный']}"
+        )
         data_for_doc["import_text"] = textDataPreparer.gen_text_flow(
             "import",
             self.year,
@@ -186,7 +248,8 @@ class TradeDataPreparer:
             f'{region_cases[self.region]["родительный"]} '
             f'с {country_cases[self.country_or_group]["творительный"]} '
             f'({format_month_range(months)}{self.year} '
-            f'{"год" if months[-1] == 12 else "года"}) '
-            f'{category_text}.docx'
+            f'{"год" if months[-1] == 12 else "года"})'
+            f'{category_text}, '
+            f'{self.digit}-знак(ов).docx'
         )
         return data_for_doc
