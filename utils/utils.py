@@ -61,13 +61,13 @@ def format_percent(value, with_sign=True):
 
         if value <= 0:
             result = f"{abs_value}%" if not with_sign else f"{rounded}%"
+            result = result.replace(".", ",")
         elif value <= 100:
             result = f"{abs_value}%" if not with_sign else f"+{abs_value}%"
+            result = result.replace(".", ",")
         else:
             growth = round(1 + value / 100, 1)
             result = f"рост в {growth} р."
-
-    result = result.replace(".", ",")
 
     return result
 
@@ -84,15 +84,16 @@ def round_percent(num):
 
 
 def smart_pair_round(num1, num2):
-    
     precision = 1
     while True:
         rounded1 = round(num1, precision)
         rounded2 = round(num2, precision)
         if rounded1 != rounded2 or precision >= 10:
-            
-            return rounded1, rounded2
+            formatted1 = str(rounded1).replace('.', ',')
+            formatted2 = str(rounded2).replace('.', ',')
+            return formatted1, formatted2
         precision += 1
+
 
 def get_main_table_divider(values):
     max_value = max(values)
@@ -129,5 +130,3 @@ def num_converter(num):
         return num / 1_000, "млн."
     else:
         return num, "тыс."
-
-
