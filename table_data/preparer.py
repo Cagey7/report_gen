@@ -139,4 +139,48 @@ class TableDataPreparer:
             row_data = [name, target_volume, target_year_value, target_year_share, base_volume, base_year_value, base_year_share, growth_volume, growth_value]
             table_data.append(row_data)
         return table_data
+    
+    
+    def build_country_table_table(self, data, table_size):
+        table_data = []
+        for row in data:
+            import_value = row["import_value"] or 0
+            export_value = row["export_value"] or 0
+            total = import_value + export_value
+            new_row = [row["country"], total, row["export_value"], row["import_value"]]
+            table_data.append(new_row)
+            sorted_data = sorted(table_data, key=lambda x: x[1], reverse=True)
+        
+        total_total = sum(row[1] or 0 for row in sorted_data)
+        total_export = sum(row[2] or 0 for row in sorted_data)
+        total_import = sum(row[3] or 0 for row in sorted_data)
+        total_total_others = sum(row[1] or 0 for row in sorted_data[table_size:])
+        total_export_others = sum(row[2] or 0 for row in sorted_data[table_size:])
+        total_import_others = sum(row[3] or 0 for row in sorted_data[table_size:])
+        total_row = ["Всего", total_total, total_export, total_import]
+        total_row_others = ["Остальные страны", total_total_others, total_export_others, total_import_others]
+        
+        table_data_values = [total_row] + sorted_data[:table_size]
+        if total_total_others != 0:
+            table_data_values += [total_row_others]
+        
+        div, units = get_divider(total_total/1000)
+        final_table_data = []
+        for i, row in enumerate(table_data_values):
+            if i == 0:
+                new_row = ["", row[0], smart_round(row[1]/div), smart_round(row[2]/div), smart_round(row[3]/div), "100%", "100%", "100%"]
+            else:
+                new_row = [i, row[0], row[1], row[2], row[3], round_percent(row[1]/total_total*100), round_percent(row[2]/total_export*100), round_percent(row[3]/total_import*100)]
+                new_row = [
+                    i,
+                    row[0],
+                    smart_round(row[1]/div),
+                    smart_round(row[2]/div),
+                    smart_round(row[3]/div),
+                    f"{round_percent(row[1]/total_total*100)}%",
+                    f"{round_percent(row[2]/total_export*100)}%",
+                    f"{round_percent(row[3]/total_import*100)}%"
+                ]
+            final_table_data.append(new_row)
             
+        return units, final_table_data

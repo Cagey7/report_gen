@@ -11,7 +11,7 @@ from utils.utils import *
 
 
 class TradeDataPreparer:
-    def __init__(self, conn, region, country_or_group, year, digit, category, text_size, table_size, exclude_tn_veds, month_range):
+    def __init__(self, conn, region, country_or_group, year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range):
         self.conn = conn
         self.region = region
         self.country_or_group = country_or_group
@@ -20,6 +20,7 @@ class TradeDataPreparer:
         self.category = category
         self.text_size = text_size
         self.table_size = table_size
+        self.country_table_size = country_table_size
         self.exclude_tn_veds = exclude_tn_veds
         self.month_range = month_range
         
@@ -98,6 +99,15 @@ class TradeDataPreparer:
             self.digit,
             tn_veds
         )
+        country_trade_data = fetcher.fetch_country_trade_data(
+            self.region,
+            countries,
+            self.year,
+            months,
+            self.digit,
+            tn_veds
+        )
+
         table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
         table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
         
@@ -115,14 +125,12 @@ class TradeDataPreparer:
             "target_year_sum": target_total,
             "growth_value": growth_total
         }
-        print(import_data_sum)
         if self.category:
             import_data_sum = import_data_sum_category
             export_data_sum = export_data_sum_category
             base_total = base_total_category
             target_total = target_total_category
             total_data_sum = total_data_sum_category
-        print(import_data_sum)
         data_for_doc = {}
             
         
@@ -168,6 +176,17 @@ class TradeDataPreparer:
             main_table_measure
         )
         
+        if len(countries) > 1:
+            country_table_units, country_table_data = tableDataPreparer.build_country_table_table(
+                country_trade_data,
+                self.country_table_size
+            )
+            
+            data_for_doc["country_table_units"] = country_table_units
+            data_for_doc["country_table_data"] = country_table_data
+            print(data_for_doc["country_table_units"])
+            print(data_for_doc["country_table_data"])
+                    
         import_table_div, import_table_measure = get_export_import_table_divider(
             [import_data_sum["base_year_sum"],
             import_data_sum["target_year_sum"]]
