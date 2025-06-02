@@ -47,8 +47,8 @@ class TableDataPreparer:
                 growth_value_export = "-100%"
             else:
                 growth_value_export = export_sum["growth_value"]
-            if target_year_sum_export == base_year_sum_total:
-                target_year_sum_total, base_year_sum_export = smart_pair_round(export_sum["target_year_sum"]/div, export_sum["base_year_sum"]/div)
+            if target_year_sum_export == base_year_sum_export:
+                target_year_sum_export, base_year_sum_export = smart_pair_round(export_sum["target_year_sum"]/div, export_sum["base_year_sum"]/div)
             export_row = ["Экспорт", target_year_sum_export, base_year_sum_export, format_percent(growth_value_export)]
 
 
@@ -64,7 +64,7 @@ class TableDataPreparer:
             else:
                 growth_value_import = import_sum["growth_value"]
             if target_year_sum_import == base_year_sum_import:
-                target_year_sum_total, base_year_sum_export = smart_pair_round(import_sum["target_year_sum"]/div, import_sum["base_year_sum"]/div)
+                target_year_sum_import, base_year_sum_import = smart_pair_round(import_sum["target_year_sum"]/div, import_sum["base_year_sum"]/div)
             
             import_row = ["Импорт", target_year_sum_import, base_year_sum_import, format_percent(growth_value_import)]
 
@@ -143,44 +143,63 @@ class TableDataPreparer:
     
     def build_country_table_table(self, data, table_size):
         table_data = []
+
+        # Собираем данные
         for row in data:
-            import_value = row["import_value"] or 0
-            export_value = row["export_value"] or 0
+            import_value = row.get("import_value", 0) or 0
+            export_value = row.get("export_value", 0) or 0
             total = import_value + export_value
-            new_row = [row["country"], total, row["export_value"], row["import_value"]]
+            new_row = [row.get("country", ""), total, export_value, import_value]
             table_data.append(new_row)
-            sorted_data = sorted(table_data, key=lambda x: x[1], reverse=True)
-        
+
+        # Сортируем
+        sorted_data = sorted(table_data, key=lambda x: x[1], reverse=True)
+
+        # Считаем итоги
         total_total = sum(row[1] or 0 for row in sorted_data)
         total_export = sum(row[2] or 0 for row in sorted_data)
         total_import = sum(row[3] or 0 for row in sorted_data)
         total_total_others = sum(row[1] or 0 for row in sorted_data[table_size:])
         total_export_others = sum(row[2] or 0 for row in sorted_data[table_size:])
         total_import_others = sum(row[3] or 0 for row in sorted_data[table_size:])
+
         total_row = ["Всего", total_total, total_export, total_import]
         total_row_others = ["Остальные страны", total_total_others, total_export_others, total_import_others]
-        
+
         table_data_values = [total_row] + sorted_data[:table_size]
         if total_total_others != 0:
-            table_data_values += [total_row_others]
-        
-        div, units = get_divider(total_total/1000)
+            table_data_values.append(total_row_others)
+
+        div, units = get_divider(total_total / 1000)
+
         final_table_data = []
         for i, row in enumerate(table_data_values):
             if i == 0:
-                new_row = ["", row[0], smart_round(row[1]/div), smart_round(row[2]/div), smart_round(row[3]/div), "100%", "100%", "100%"]
+                new_row = [
+                    "",
+                    row[0],
+                    smart_round((row[1] or 0) / div if div != 0 else 0),
+                    smart_round((row[2] or 0) / div if div != 0 else 0),
+                    smart_round((row[3] or 0) / div if div != 0 else 0),
+                    "100%", "100%", "100%"
+                ]
             else:
-                new_row = [i, row[0], row[1], row[2], row[3], round_percent(row[1]/total_total*100), round_percent(row[2]/total_export*100), round_percent(row[3]/total_import*100)]
+                total_p = round_percent((row[1] or 0) / total_total * 100) if total_total != 0 else 0
+                export_p = round_percent((row[2] or 0) / total_export * 100) if total_export != 0 else 0
+                import_p = round_percent((row[3] or 0) / total_import * 100) if total_import != 0 else 0
+
                 new_row = [
                     i,
                     row[0],
-                    smart_round(row[1]/div),
-                    smart_round(row[2]/div),
-                    smart_round(row[3]/div),
-                    f"{round_percent(row[1]/total_total*100)}%",
-                    f"{round_percent(row[2]/total_export*100)}%",
-                    f"{round_percent(row[3]/total_import*100)}%"
+                    smart_round((row[1] or 0) / div if div != 0 else 0),
+                    smart_round((row[2] or 0) / div if div != 0 else 0),
+                    smart_round((row[3] or 0) / div if div != 0 else 0),
+                    f"{total_p}%",
+                    f"{export_p}%",
+                    f"{import_p}%"
                 ]
+
             final_table_data.append(new_row)
-            
+
         return units, final_table_data
+

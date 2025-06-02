@@ -26,6 +26,15 @@ class TradeDocumentGenerator:
         self.add_document_header(doc, self.prepared_data["document_header"])
         self.add_summary_paragraph(doc, self.prepared_data["summary_text"])
         self.add_summary_table(doc, self.prepared_data["summary_header"], self.prepared_data["summary_table"])
+        
+        if self.prepared_data.get("country_table_data"):
+            self.add_country_table(
+                doc,
+                self.prepared_data["country_table_data"],
+                self.prepared_data["country_table_header"],
+                self.prepared_data["country_table_units"],
+            )
+        
         self.add_import_analysis_text(doc, self.prepared_data["export_text"])
         self.add_import_analysis_text(doc, self.prepared_data["import_text"])
 
@@ -144,32 +153,29 @@ class TradeDocumentGenerator:
         # Заголовок таблицы без отступа после
         paragraph = doc.add_paragraph()
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        paragraph.paragraph_format.space_after = Pt(0)  # убираем отступ после заголовка
+        paragraph.paragraph_format.space_after = Pt(0)
         self.format_paragraph(paragraph, first_line_indent=False)
         run = paragraph.add_run(title)
-        run.bold = True
+        run.italic = True
         self.set_run_style(run)
 
         rows = len(table_data)
         cols = len(table_data[0])
         table = doc.add_table(rows=rows, cols=cols)
         table.style = 'Table Grid'
-
-        available_width = self.get_available_page_width(doc)
-        col_width = available_width / cols
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER  # Центрируем таблицу
 
         for i, row in enumerate(table_data):
             for j, cell_text in enumerate(row):
                 cell = table.cell(i, j)
                 cell.text = str(cell_text)
-                cell.width = col_width
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
 
                 for paragraph in cell.paragraphs:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     run = paragraph.runs[0]
-                    self.set_run_style(run)
-
+                    run.font.name = 'Times New Roman'
+                    run.font.size = Pt(14)  # Уменьшаем шрифт
                     if i == 0 and j != 0:
                         run.bold = True
                     elif i == 1:
@@ -301,7 +307,7 @@ class TradeDocumentGenerator:
         header_paragraph = doc.add_paragraph(table_header)
         header_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run = header_paragraph.runs[0]
-        run.bold = True
+        run.italic = True
         run.font.name = 'Times New Roman'
         run.font.size = Pt(14)
         header_paragraph.paragraph_format.space_after = 0
@@ -385,3 +391,90 @@ class TradeDocumentGenerator:
                             run.font.color.rgb = RGBColor(0, 176, 80)  # зелёный
                         elif val.strip().startswith("-"):
                             run.font.color.rgb = RGBColor(255, 0, 0)  # красный
+
+
+    def add_country_table(self, doc, data, header, units):
+        # ======= Заголовок таблицы =======
+        paragraph = doc.add_paragraph()
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        paragraph.paragraph_format.space_after = Pt(0)
+        paragraph.paragraph_format.space_before = Pt(12)  # Добавляем небольшой отступ сверху
+        self.format_paragraph(paragraph, first_line_indent=False)
+        run = paragraph.add_run(header)
+        run.italic = True
+        self.set_run_style(run)
+
+        # ======= Таблица =======
+        table = doc.add_table(rows=2 + len(data), cols=8)
+        table.style = 'Table Grid'
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        # ======= Первая строка заголовка =======
+        header_row_1 = table.rows[0].cells
+        header_row_1[0].text = '№'
+        header_row_1[1].text = 'Страны'
+        header_row_1[2].text = f'Стоимость, {units}'
+        header_row_1[5].text = 'Доля'
+
+        # ======= Вторая строка заголовка =======
+        header_row_2 = table.rows[1].cells
+        header_row_2[2].text = 'ТО'
+        header_row_2[3].text = 'Экспорт'
+        header_row_2[4].text = 'Импорт'
+        header_row_2[5].text = 'ТО'
+        header_row_2[6].text = 'Экспорт'
+        header_row_2[7].text = 'Импорт'
+
+        # ======= Объединение ячеек =======
+        def merge_horizontally(row, start_idx, end_idx):
+            start_cell = row.cells[start_idx]
+            for idx in range(start_idx + 1, end_idx + 1):
+                start_cell.merge(row.cells[idx])
+
+        def merge_vertically(table, col_idx, start_row_idx, end_row_idx):
+            start_cell = table.cell(start_row_idx, col_idx)
+            for row_idx in range(start_row_idx + 1, end_row_idx + 1):
+                start_cell.merge(table.cell(row_idx, col_idx))
+
+        merge_vertically(table, 0, 0, 1)  # №
+        merge_vertically(table, 1, 0, 1)  # Страны
+        merge_horizontally(table.rows[0], 2, 4)
+        merge_horizontally(table.rows[0], 5, 7)
+
+        # ======= Заливка заголовков =======
+        for row in [table.rows[0], table.rows[1]]:
+            for cell in row.cells:
+                self.set_cell_background(cell, "D9D9D9")
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = paragraph.runs[0]
+                    run.font.bold = True
+                    run.font.name = 'Times New Roman'
+                    run.font.size = Pt(12)  # шрифт заголовков
+
+        # ======= Ширина столбцов =======
+        for row in table.rows:
+            row.cells[0].width = Cm(1)
+            row.cells[1].width = Cm(3)
+
+        # ======= Данные =======
+        for row_idx, row_data in enumerate(data, start=2):
+            row_cells = table.rows[row_idx].cells
+            for col_idx, value in enumerate(row_data):
+                cell = row_cells[col_idx]
+                cell.text = str(value)
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = paragraph.runs[0]
+                    run.font.name = 'Times New Roman'
+                    run.font.size = Pt(12)  # шрифт данных
+                    if row_idx == 2:
+                        run.bold = True
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+
+        # ======= Центрируем текст во всех ячейках =======
+        for row in table.rows:
+            for cell in row.cells:
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER

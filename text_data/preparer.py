@@ -118,7 +118,7 @@ class TextDataPreparer:
 
             summary_text = self.gen_summary_text(direction, country_or_group, region, year, months, sum_data, div, units)
             if summary_text == "":
-                return f"Экспорт в {year} году в {country_cases['винительный']} за отчетный период отсутствовал."
+                return f"Экспорт в {year} году в {region_cases[region]['винительный']} за отчетный период отсутствовал."
             export_text.append(summary_text)
 
             rows_decline_text = self.gen_decline_growth_text("decline", data_reverse, text_size, exclude_tn_veds)
@@ -189,7 +189,7 @@ class TextDataPreparer:
             import_text = []
             summary_text = self.gen_summary_text(direction, country_or_group, region, year, months, sum_data, div, units)
             if summary_text == "":
-                return f"Импорт в {year} году из {country_cases['винительный']} за отчетный период отсутствовал."
+                return f"Импорт в {year} году из {region_cases[region]['винительный']} за отчетный период отсутствовал."
             import_text.append(summary_text)
 
 

@@ -18,7 +18,7 @@ def format_month_range(months):
     end = month_names[months[-1] - 1]
 
     if start == end:
-        return start
+        return f"{start} "
     else:
         return f"{start}–{end} "
 
@@ -50,6 +50,7 @@ def smart_round(num):
     else:
         return f"{int_part_with_spaces},{frac_part}"
 
+
 def format_percent(value, with_sign=True):
     if with_sign and value is None:
         result = "100%"
@@ -61,15 +62,20 @@ def format_percent(value, with_sign=True):
 
         if value <= 0:
             result = f"{abs_value}%" if not with_sign else f"{rounded}%"
-            result = result.replace(".", ",")
         elif value <= 100:
             result = f"{abs_value}%" if not with_sign else f"+{abs_value}%"
-            result = result.replace(".", ",")
         else:
             growth = round(1 + value / 100, 1)
-            result = f"рост в {growth} р."
+            if growth == int(growth):
+                growth = int(growth)
+            growth_str = str(growth).replace(".", ",")
+            result = f"рост в {growth_str} р."
+
+        if "%" in result:
+            result = result.replace(".", ",")
 
     return result
+
 
 def round_percent(num):
     if abs(int(num)) >= 1:

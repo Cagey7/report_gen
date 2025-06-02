@@ -184,8 +184,8 @@ class TradeDataPreparer:
             
             data_for_doc["country_table_units"] = country_table_units
             data_for_doc["country_table_data"] = country_table_data
-            print(data_for_doc["country_table_units"])
-            print(data_for_doc["country_table_data"])
+            data_for_doc["country_table_header"] = "Показатели внешней торговли в разрезе стран"
+
                     
         import_table_div, import_table_measure = get_export_import_table_divider(
             [import_data_sum["base_year_sum"],
