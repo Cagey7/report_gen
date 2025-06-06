@@ -51,12 +51,16 @@ def smart_round(num):
         return f"{int_part_with_spaces},{frac_part}"
 
 
-def format_percent(value, with_sign=True):
+def format_percent(value, with_sign=True, if_new=False):
     if with_sign and value is None:
         result = "100%"
     elif not with_sign and value is None:
         result = "-"
     else:
+        if value == 100 and if_new:
+            return "new"
+        elif value == 0 and if_new:
+            return "-100%"
         rounded = round_percent(value)
         abs_value = abs(rounded)
 

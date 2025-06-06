@@ -24,16 +24,11 @@ class TableDataPreparer:
         if target_year_sum_total == 0 and base_year_sum_total == 0:
             total_row = []
         else:
-            if target_year_sum_total == 0:
-                growth_value_total = "new"
-            elif base_year_sum_total == 0:
-                growth_value_total = "-100%"
-            else:
-                growth_value_total = total_sum["growth_value"]
-                if target_year_sum_total == base_year_sum_total:
-                    target_year_sum_total, base_year_sum_total = smart_pair_round(total_sum["target_year_sum"]/div, total_sum["base_year_sum"]/div)
+            growth_value_total = total_sum["growth_value"]
+            if target_year_sum_total == base_year_sum_total:
+                target_year_sum_total, base_year_sum_total = smart_pair_round(total_sum["target_year_sum"]/div, total_sum["base_year_sum"]/div)
             
-            total_row = ["Товарооборот", target_year_sum_total, base_year_sum_total, format_percent(growth_value_total)]
+            total_row = ["Товарооборот", target_year_sum_total, base_year_sum_total, format_percent(growth_value_total, if_new=True)]
 
 
         if export_sum["target_year_sum"] == 0 and export_sum["base_year_sum"] == 0:
@@ -41,15 +36,10 @@ class TableDataPreparer:
         else:
             target_year_sum_export = smart_round(export_sum["target_year_sum"]/div)
             base_year_sum_export = smart_round(export_sum["base_year_sum"]/div)
-            if target_year_sum_export == 0:
-                growth_value_export = "new"
-            elif base_year_sum_export == 0:
-                growth_value_export = "-100%"
-            else:
-                growth_value_export = export_sum["growth_value"]
+            growth_value_export = export_sum["growth_value"]
             if target_year_sum_export == base_year_sum_export:
                 target_year_sum_export, base_year_sum_export = smart_pair_round(export_sum["target_year_sum"]/div, export_sum["base_year_sum"]/div)
-            export_row = ["Экспорт", target_year_sum_export, base_year_sum_export, format_percent(growth_value_export)]
+            export_row = ["Экспорт", target_year_sum_export, base_year_sum_export, format_percent(growth_value_export, if_new=True)]
 
 
         if import_sum["target_year_sum"] == 0 and import_sum["base_year_sum"] == 0:
@@ -57,16 +47,11 @@ class TableDataPreparer:
         else:
             target_year_sum_import = smart_round(import_sum["target_year_sum"]/div)
             base_year_sum_import = smart_round(import_sum["base_year_sum"]/div)
-            if target_year_sum_import == 0:
-                growth_value_import = "new"
-            elif base_year_sum_import == 0:
-                growth_value_import = "-100%"
-            else:
-                growth_value_import = import_sum["growth_value"]
+            growth_value_import = import_sum["growth_value"]
             if target_year_sum_import == base_year_sum_import:
                 target_year_sum_import, base_year_sum_import = smart_pair_round(import_sum["target_year_sum"]/div, import_sum["base_year_sum"]/div)
             
-            import_row = ["Импорт", target_year_sum_import, base_year_sum_import, format_percent(growth_value_import)]
+            import_row = ["Импорт", target_year_sum_import, base_year_sum_import, format_percent(growth_value_import, if_new=True)]
 
 
         target_balance_data = smart_round(target_balance/div)
@@ -99,7 +84,7 @@ class TableDataPreparer:
             smart_round(sum_data["base_year_sum"]/div),
             "100%",
             "",
-            format_percent(sum_data["growth_value"])
+            format_percent(sum_data["growth_value"], if_new=True)
         ]
         
         table_data.append(sum_row)
@@ -144,7 +129,6 @@ class TableDataPreparer:
     def build_country_table_table(self, data, table_size):
         table_data = []
 
-        # Собираем данные
         for row in data:
             import_value = row.get("import_value", 0) or 0
             export_value = row.get("export_value", 0) or 0
@@ -152,10 +136,8 @@ class TableDataPreparer:
             new_row = [row.get("country", ""), total, export_value, import_value]
             table_data.append(new_row)
 
-        # Сортируем
         sorted_data = sorted(table_data, key=lambda x: x[1], reverse=True)
 
-        # Считаем итоги
         total_total = sum(row[1] or 0 for row in sorted_data)
         total_export = sum(row[2] or 0 for row in sorted_data)
         total_import = sum(row[3] or 0 for row in sorted_data)

@@ -119,7 +119,13 @@ class TradeDataPreparer:
 
         base_total = export_data_sum["base_year_sum"] + import_data_sum["base_year_sum"]
         target_total = export_data_sum["target_year_sum"] + import_data_sum["target_year_sum"]
-        growth_total = ((base_total - target_total) / target_total) * 100 if target_total else 0
+
+        if target_total == 0:
+            growth_total = 100
+        elif base_total == 0:
+            growth_total == 0
+        else:
+            growth_total = ((base_total - target_total) / target_total) * 100 if target_total else 0
         total_data_sum = {
             "base_year_sum": base_total,
             "target_year_sum": target_total,
