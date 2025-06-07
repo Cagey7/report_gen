@@ -32,6 +32,16 @@ AND r.name = %s
 AND d.year = %s;
 """
 
+GET_MAX_MONTH_WITHOUT_EAEU = """
+SELECT MAX(month)
+FROM data d
+JOIN countries c ON d.country_id = c.id
+JOIN regions r ON d.region_id = r.id
+WHERE c.name_ru = 'Китай'
+AND r.name = %s
+AND d.year = %s;
+"""
+
 GET_TN_VEDS_BY_CATEGORY = """
 SELECT v.code
 FROM tn_veds v

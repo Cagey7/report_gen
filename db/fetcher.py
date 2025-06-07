@@ -4,6 +4,7 @@ from db.queries import (
     GET_COUNTRY_MEMBERS,
     GET_MAX_MONTH,
     GET_MAX_MONTH_EAEU,
+    GET_MAX_MONTH_WITHOUT_EAEU,
     GET_TN_VEDS_BY_CATEGORY,
     GET_TN_VEDS_BY_DIGIT,
     FETCH_TRADE_DATA,
@@ -38,8 +39,12 @@ class TradeDataFetcher:
 
         if datetime.now().year != year:
             months = list(range(1, 13))
-        elif len(country_list) > 1 and any(item in country_list for item in self.get_country_list("ЕАЭС")):
+        elif any(item in country_list for item in self.get_country_list("ЕАЭС")):
             row = self.execute_query(GET_MAX_MONTH_EAEU, (region, year), one=True)
+            month = row[0] if row and row[0] is not None else 0
+            months = list(range(1, month+1))
+        elif any(item in country_list for item in self.get_country_list("страны ДЗ")):
+            row = self.execute_query(GET_MAX_MONTH_WITHOUT_EAEU, (region, year), one=True)
             month = row[0] if row and row[0] is not None else 0
             months = list(range(1, month+1))
         else:
