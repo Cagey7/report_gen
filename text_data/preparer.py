@@ -213,7 +213,15 @@ class TextDataPreparer:
                     f"Вместе с тем, наблюдается снижение экспортных поставок таких товаров, как: "
                     f"{', '.join(rows_decline_text)}."
                 )
+                if row_growth_text == []:
+                    import_text.append("")
+                else:
+                    import_text.append(growth_text)
 
+                if rows_decline_text == []:
+                    import_text.append("")
+                else:
+                    import_text.append(decline_text)
             else:
                 decline_text = (
                     f"Сокращение экспорта из {region_cases[region]['родительный']} обосновывается снижением поставок таких товаров, как: "

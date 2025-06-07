@@ -64,6 +64,15 @@ class TradeDataPreparer:
                 tn_veds_category
             )
 
+            country_trade_data_category = fetcher.fetch_country_trade_data(
+                self.region,
+                countries,
+                self.year,
+                months,
+                6,
+                tn_veds_category
+            )
+
             import_data_sum_category = transformer.gen_dict_sum_data("import", base_year_data_category, target_year_data_category)
             export_data_sum_category = transformer.gen_dict_sum_data("export", base_year_data_category, target_year_data_category)
 
@@ -137,6 +146,7 @@ class TradeDataPreparer:
             base_total = base_total_category
             target_total = target_total_category
             total_data_sum = total_data_sum_category
+            country_trade_data = country_trade_data_category
         data_for_doc = {}
             
         

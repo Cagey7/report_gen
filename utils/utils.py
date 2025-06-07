@@ -64,6 +64,11 @@ def format_percent(value, with_sign=True, if_new=False):
         rounded = round_percent(value)
         abs_value = abs(rounded)
 
+        if abs_value == int(abs_value):
+            abs_value = int(abs_value)
+        if rounded == int(rounded):
+            rounded = int(rounded)
+
         if value <= 0:
             result = f"{abs_value}%" if not with_sign else f"{rounded}%"
         elif value <= 100:
