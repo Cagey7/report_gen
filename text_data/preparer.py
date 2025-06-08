@@ -206,7 +206,7 @@ class TextDataPreparer:
             
             if sum_data["base_year_sum"] > sum_data["target_year_sum"]:
                 growth_text = (
-                    f"Рост импорта обосновывается увеличением поставок таких товаров, как: "
+                    f"Рост импорта обосновывается увеличением ввоза таких товаров, как: "
                     f"{', '.join(row_growth_text)}."
                 )
                 decline_text = (
