@@ -48,8 +48,8 @@ def main():
     
     tradeDocumentGenerator = TradeDocumentGenerator(data_for_doc)
     
-    tradeDocumentGenerator.generate()
-
+    doc, filename = tradeDocumentGenerator.generate()
+    doc.save(filename)
 
 if __name__ == "__main__":
     main()

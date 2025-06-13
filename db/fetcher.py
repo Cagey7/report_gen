@@ -39,7 +39,7 @@ class TradeDataFetcher:
 
         if datetime.now().year != year:
             months = list(range(1, 13))
-        elif any(item in country_list for item in self.get_country_list("ЕАЭС")):
+        elif any(item in country_list for item in self.get_country_list("страны ЕАЭС")):
             row = self.execute_query(GET_MAX_MONTH_EAEU, (region, year), one=True)
             month = row[0] if row and row[0] is not None else 0
             months = list(range(1, month+1))

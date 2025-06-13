@@ -54,8 +54,8 @@ class TradeDocumentGenerator:
             self.prepared_data["year"],
             self.prepared_data["import_table_measure"]
         )
-        doc.save(self.prepared_data["file_name"])
 
+        return doc, self.prepared_data["file_name"]
 
     # Установка стиля текста
     def set_run_style(self, run):
