@@ -1,4 +1,7 @@
 import re
+import os
+import psycopg2
+from dotenv import load_dotenv
 from docx import Document
 from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -8,7 +11,8 @@ from docx.oxml.ns import qn
 from docx.shared import Cm
 from docx.shared import RGBColor
 from utils.utils import format_month_range
-
+from db.fetcher import TradeDataFetcher
+from report_data.preparer import TradeDataPreparer
 
 class TradeDocumentGenerator:
     def __init__(self, prepared_data):
@@ -478,3 +482,47 @@ class TradeDocumentGenerator:
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
                 for paragraph in cell.paragraphs:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+
+def generate_trade_document(
+    region,
+    country_or_group,
+    year,
+    digit=4,
+    category=None,
+    text_size=7,
+    table_size=25,
+    country_table_size=15,
+    month_range_raw="",
+    exclude_raw=""
+):
+    load_dotenv()
+    exclude_tn_veds = [item.strip() for item in exclude_raw.split(",") if item.strip()]
+    parts = [int(m.strip()) for m in month_range_raw.split(",") if m.strip()]
+    if len(parts) == 2:
+        month_range = list(range(parts[0], parts[1] + 1))
+    elif len(parts) == 1:
+        month_range = [parts[0]]
+    else:
+        month_range = []
+
+    conn = psycopg2.connect(
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        database=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASS")
+    )
+
+    tradeDataFetcher = TradeDataFetcher(conn)
+    if not tradeDataFetcher.is_data_exists(country_or_group, region, year, month_range):
+        exit("Данных нет")
+
+    tradeDataPreparer = TradeDataPreparer(conn, region, country_or_group, year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range)
+    
+    data_for_doc = tradeDataPreparer.prepare()
+    
+    tradeDocumentGenerator = TradeDocumentGenerator(data_for_doc)
+    
+    doc, filename = tradeDocumentGenerator.generate()
+    return doc, filename
