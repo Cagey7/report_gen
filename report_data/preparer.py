@@ -42,47 +42,83 @@ class TradeDataPreparer:
             tn_veds_category = fetcher.get_tn_ved_list(6, self.category)
             if self.digit == 4:
                 tn_veds = list(set(num[:-2] for num in tn_veds_category))
+                base_year_data = fetcher.fetch_trade_data_category(
+                    self.region,
+                    self.country_or_group,
+                    countries,
+                    self.year,
+                    months,
+                    6,
+                    tn_veds_category
+                )
+                target_year_data = fetcher.fetch_trade_data_category(
+                    self.region,
+                    self.country_or_group,
+                    countries,
+                    self.year - 1,
+                    months,
+                    6,
+                    tn_veds_category
+                )
+                table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
+                table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
+                
+                table_data_import_reverse = transformer.get_table_data("import", target_year_data, base_year_data)
+                table_data_export_reverse = transformer.get_table_data("export", target_year_data, base_year_data)
             elif self.digit == 6:
                 tn_veds = fetcher.get_tn_ved_list(self.digit, self.category)
 
-            base_year_data_category = fetcher.fetch_trade_data(
+                base_year_data = fetcher.fetch_trade_data(
+                    self.region,
+                    self.country_or_group,
+                    countries,
+                    self.year,
+                    months,
+                    6,
+                    tn_veds_category
+                )
+                target_year_data = fetcher.fetch_trade_data(
+                    self.region,
+                    self.country_or_group,
+                    countries,
+                    self.year - 1,
+                    months,
+                    6,
+                    tn_veds_category
+                )
+
+                table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
+                table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
+                
+                table_data_import_reverse = transformer.get_table_data("import", target_year_data, base_year_data)
+                table_data_export_reverse = transformer.get_table_data("export", target_year_data, base_year_data)
+
+            country_trade_data = fetcher.fetch_country_trade_data(
                 self.region,
-                self.country_or_group,
                 countries,
                 self.year,
                 months,
                 6,
                 tn_veds_category
             )
-            target_year_data_category = fetcher.fetch_trade_data(
-                self.region,
-                self.country_or_group,
-                countries,
-                self.year - 1,
-                months,
-                6,
-                tn_veds_category
-            )
 
-            country_trade_data_category = fetcher.fetch_country_trade_data(
-                self.region,
-                countries,
-                self.year,
-                months,
-                6,
-                tn_veds_category
-            )
+            import_data_sum = transformer.gen_dict_sum_data("import", base_year_data, target_year_data)
+            export_data_sum = transformer.gen_dict_sum_data("export", base_year_data, target_year_data)
 
-            import_data_sum_category = transformer.gen_dict_sum_data("import", base_year_data_category, target_year_data_category)
-            export_data_sum_category = transformer.gen_dict_sum_data("export", base_year_data_category, target_year_data_category)
-
-            base_total_category = export_data_sum_category["base_year_sum"] + import_data_sum_category["base_year_sum"]
-            target_total_category = export_data_sum_category["target_year_sum"] + import_data_sum_category["target_year_sum"]
-            growth_total_category = ((base_total_category - target_total_category) / target_total_category) * 100 if target_total_category else 0
-            total_data_sum_category = {
-                "base_year_sum": base_total_category,
-                "target_year_sum": target_total_category,
-                "growth_value": growth_total_category
+            base_total = export_data_sum["base_year_sum"] + import_data_sum["base_year_sum"]
+            target_total = export_data_sum["target_year_sum"] + import_data_sum["target_year_sum"]
+            growth_total = ((base_total - target_total) / target_total) * 100 if target_total else 0
+            
+            if target_total == 0:
+                growth_total = 100
+            elif base_total == 0:
+                growth_total == 0
+            else:
+                growth_total = ((base_total - target_total) / target_total) * 100 if target_total else 0
+            total_data_sum = {
+                "base_year_sum": base_total,
+                "target_year_sum": target_total,
+                "growth_value": growth_total
             }
 
         else:
@@ -90,66 +126,60 @@ class TradeDataPreparer:
             category_text = ""
 
 
-        base_year_data = fetcher.fetch_trade_data(
-            self.region,
-            self.country_or_group,
-            countries,
-            self.year,
-            months,
-            self.digit,
-            tn_veds
-        )
-        target_year_data = fetcher.fetch_trade_data(
-            self.region,
-            self.country_or_group,
-            countries,
-            self.year - 1,
-            months,
-            self.digit,
-            tn_veds
-        )
-        country_trade_data = fetcher.fetch_country_trade_data(
-            self.region,
-            countries,
-            self.year,
-            months,
-            self.digit,
-            tn_veds
-        )
+            base_year_data = fetcher.fetch_trade_data(
+                self.region,
+                self.country_or_group,
+                countries,
+                self.year,
+                months,
+                self.digit,
+                tn_veds
+            )
+            target_year_data = fetcher.fetch_trade_data(
+                self.region,
+                self.country_or_group,
+                countries,
+                self.year - 1,
+                months,
+                self.digit,
+                tn_veds
+            )
+            country_trade_data = fetcher.fetch_country_trade_data(
+                self.region,
+                countries,
+                self.year,
+                months,
+                self.digit,
+                tn_veds
+            )
 
-        table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
-        table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
-        
-        table_data_import_reverse = transformer.get_table_data("import", target_year_data, base_year_data)
-        table_data_export_reverse = transformer.get_table_data("export", target_year_data, base_year_data)
+            table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
+            table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
+            
+            table_data_import_reverse = transformer.get_table_data("import", target_year_data, base_year_data)
+            table_data_export_reverse = transformer.get_table_data("export", target_year_data, base_year_data)
 
-        import_data_sum = transformer.gen_dict_sum_data("import", base_year_data, target_year_data)
-        export_data_sum = transformer.gen_dict_sum_data("export", base_year_data, target_year_data)
+            import_data_sum = transformer.gen_dict_sum_data("import", base_year_data, target_year_data)
+            export_data_sum = transformer.gen_dict_sum_data("export", base_year_data, target_year_data)
 
-        base_total = export_data_sum["base_year_sum"] + import_data_sum["base_year_sum"]
-        target_total = export_data_sum["target_year_sum"] + import_data_sum["target_year_sum"]
+            base_total = export_data_sum["base_year_sum"] + import_data_sum["base_year_sum"]
+            target_total = export_data_sum["target_year_sum"] + import_data_sum["target_year_sum"]
 
-        if target_total == 0:
-            growth_total = 100
-        elif base_total == 0:
-            growth_total == 0
-        else:
-            growth_total = ((base_total - target_total) / target_total) * 100 if target_total else 0
-        total_data_sum = {
-            "base_year_sum": base_total,
-            "target_year_sum": target_total,
-            "growth_value": growth_total
-        }
-        if self.category:
-            import_data_sum = import_data_sum_category
-            export_data_sum = export_data_sum_category
-            base_total = base_total_category
-            target_total = target_total_category
-            total_data_sum = total_data_sum_category
-            country_trade_data = country_trade_data_category
+            if target_total == 0:
+                growth_total = 100
+            elif base_total == 0:
+                growth_total == 0
+            else:
+                growth_total = ((base_total - target_total) / target_total) * 100 if target_total else 0
+            total_data_sum = {
+                "base_year_sum": base_total,
+                "target_year_sum": target_total,
+                "growth_value": growth_total
+            }
+
+
         data_for_doc = {}
             
-        
         data_for_doc["document_header"] = (
             f"Взаимная торговля {region_cases[self.region]['родительный']} "
             f"с {country_cases[self.country_or_group]['творительный']} "
@@ -284,7 +314,8 @@ class TradeDataPreparer:
             f'с {country_cases[self.country_or_group]["творительный"]} '
             f'({format_month_range(months)}{self.year} '
             f'{"год" if months[-1] == 12 else "года"})'
-            f'{category_text}, '
-            f'{self.digit}-знак(ов).docx'
+            f'{category_text}'
+            f'{", " + str(self.digit) + "-знак(ов)" if self.digit != 4 else ""}'
+            f'.docx'
         )
         return data_for_doc

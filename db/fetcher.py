@@ -8,6 +8,7 @@ from db.queries import (
     GET_TN_VEDS_BY_CATEGORY,
     GET_TN_VEDS_BY_DIGIT,
     FETCH_TRADE_DATA,
+    FETCH_TRADE_DATA_CATEGORY,
     FETCH_COUNTRY_TRADE_DATA
 )
 
@@ -64,6 +65,20 @@ class TradeDataFetcher:
     def fetch_trade_data(self, region, country, country_list, year, months, digit, tn_veds):
         params = (country, country_list, region, year, months, digit, tn_veds)
         rows = self.execute_query(FETCH_TRADE_DATA, params)
+
+        columns = [
+            "export_tons", "export_units", "export_value",
+            "import_tons", "import_units", "import_value",
+            "country", "region", "tn_ved_code",
+            "tn_ved_name", "tn_ved_measure", "year"
+        ]
+        results = [dict(zip(columns, row)) for row in rows]
+        return results
+
+
+    def fetch_trade_data_category(self, region, country, country_list, year, months, digit, tn_veds):
+        params = (country, country_list, region, year, months, digit, tn_veds)
+        rows = self.execute_query(FETCH_TRADE_DATA_CATEGORY, params)
 
         columns = [
             "export_tons", "export_units", "export_value",

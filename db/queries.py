@@ -81,6 +81,57 @@ AND tv.code = ANY(%s)
 GROUP BY r.name, tv.code, tv.name, tv.measure, d.year;
 """
 
+FETCH_TRADE_DATA_CATEGORY = """
+WITH grouped AS (
+    SELECT
+        LEFT(tv.code, 4)           AS tn_ved_code,
+        %s                         AS country_name,
+        r.name                     AS region_name,
+        d.year,
+
+        SUM(d.export_tonn)   AS total_ex_tonn,
+        SUM(d.export_units)  AS total_ex_ad_un,
+        SUM(d.export_value)  AS total_ex_value,
+        SUM(d.import_tonn)   AS total_im_tonn,
+        SUM(d.import_units)  AS total_im_ad_un,
+        SUM(d.import_value)  AS total_im_value
+
+    FROM data d
+    JOIN countries  c ON d.country_id = c.id
+    JOIN regions    r ON d.region_id  = r.id
+    JOIN tn_veds    tv ON d.tn_ved_id = tv.id
+
+    WHERE c.name_ru = ANY(%s)
+      AND r.name    = %s
+      AND d.year    = %s
+      AND d.month   = ANY(%s)
+      AND tv.digit  = %s
+      AND tv.code   = ANY(%s)
+
+    GROUP BY LEFT(tv.code, 4), r.name, d.year
+)
+
+SELECT
+    g.total_ex_tonn,
+    g.total_ex_ad_un,
+    g.total_ex_value,
+    g.total_im_tonn,
+    g.total_im_ad_un,
+    g.total_im_value,
+
+    g.country_name,
+    g.region_name,
+    g.tn_ved_code,
+    tv4.name    AS tn_ved_name,
+    tv4.measure AS tn_ved_measure,
+    g.year
+
+FROM grouped g
+JOIN tn_veds tv4
+  ON tv4.code  = g.tn_ved_code
+ AND tv4.digit = 4;
+"""
+
 
 FETCH_COUNTRY_TRADE_DATA = """
 SELECT 
