@@ -27,7 +27,12 @@ class TradeDocumentGenerator:
         section.left_margin = Inches(3 / 2.54)
         section.right_margin = Inches(1.5 / 2.54)
 
-        self.add_document_header(doc, self.prepared_data["document_header"])
+        args = [doc, self.prepared_data["document_header"]]
+
+        if "category_description" in self.prepared_data:
+            args.append(self.prepared_data["category_description"])
+
+        self.add_document_header(*args)
         self.add_summary_paragraph(doc, self.prepared_data["summary_text"])
         self.add_summary_table(doc, self.prepared_data["summary_header"], self.prepared_data["summary_table"])
         
@@ -74,20 +79,24 @@ class TradeDocumentGenerator:
         paragraph.paragraph_format.line_spacing = 1
 
     # Заголовок документа
-    def add_document_header(self, doc, header_text):
+    def add_document_header(self, doc, header_text, category_description=None):
         paragraph = doc.add_paragraph()
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-        # Отступы слева и справа для более раннего переноса строк
         paragraph_format = paragraph.paragraph_format
         paragraph_format.left_indent = Cm(2)
         paragraph_format.right_indent = Cm(2)
 
         self.format_paragraph(paragraph, first_line_indent=False)
-        
+
         run = paragraph.add_run(header_text)
         run.bold = True
         self.set_run_style(run)
+
+        if category_description:
+            run2 = paragraph.add_run("\n" + category_description)
+            run2.italic = True
+            self.set_run_style(run2)
 
     # Обычный параграф
     def add_summary_paragraph(self, doc, text):

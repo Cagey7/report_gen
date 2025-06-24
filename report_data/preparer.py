@@ -7,6 +7,7 @@ from table_data.preparer import TableDataPreparer
 from text_data.preparer import TextDataPreparer
 from data.region_cases import region_cases
 from data.country_cases import country_cases
+from data.category_descriptions import category_descriptions
 from utils.utils import *
 
 
@@ -187,6 +188,9 @@ class TradeDataPreparer:
             f"{'год' if months[-1] == 12 else 'года'}"
         )
 
+        if self.category:
+            data_for_doc["category_description"] = category_descriptions.get(self.category, self.category)
+        
         main_table_divider, main_table_measure = get_main_table_divider(
             [
                 import_data_sum["base_year_sum"], 
