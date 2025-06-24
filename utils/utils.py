@@ -145,3 +145,10 @@ def num_converter(num):
         return num / 1_000, "млн."
     else:
         return num, "тыс."
+
+
+def get_short_period(period):
+    words = period.split("–")
+    if len(words) == 1:
+        return period
+    return "-".join(word[:3] for word in words)

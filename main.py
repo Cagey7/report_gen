@@ -48,7 +48,9 @@ def main():
     
     tradeDocumentGenerator = TradeDocumentGenerator(data_for_doc)
     
-    doc, filename = tradeDocumentGenerator.generate()
+    doc, filename, short_filename = tradeDocumentGenerator.generate()
+    if filename == "нет данных":
+        exit(filename)
     doc.save(filename)
 
 if __name__ == "__main__":

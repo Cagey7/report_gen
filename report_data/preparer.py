@@ -8,6 +8,7 @@ from text_data.preparer import TextDataPreparer
 from data.region_cases import region_cases
 from data.country_cases import country_cases
 from data.category_descriptions import category_descriptions
+from data.short_regions import short_regions
 from utils.utils import *
 
 
@@ -312,7 +313,7 @@ class TradeDataPreparer:
         data_for_doc["year"] = self.year
         data_for_doc["export_table_measure"] = export_table_measure
         data_for_doc["import_table_measure"] = import_table_measure
-        data_for_doc["file_name"] = (
+        data_for_doc["filename"] = (
             f'Справка по торговле '
             f'{region_cases[self.region]["родительный"]} '
             f'с {country_cases[self.country_or_group]["творительный"]} '
@@ -320,6 +321,15 @@ class TradeDataPreparer:
             f'{"год" if months[-1] == 12 else "года"})'
             f'{category_text}'
             f'{", " + str(self.digit) + "-знак(ов)" if self.digit != 4 else ""}'
+            f'.docx'
+        )
+        
+        data_for_doc["short_filename"] = (
+            f'{short_regions[self.region]} '
+            f'- {country_cases[self.country_or_group]["именительный"][:15]} '
+            f'({get_short_period(format_month_range(months))} {self.year})'
+            f'{" " + str(self.digit) + " зн. " if self.digit != 4 else ""}'
+            f'{category_text[2:]}'
             f'.docx'
         )
         return data_for_doc

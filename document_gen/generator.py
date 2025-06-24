@@ -36,6 +36,9 @@ class TradeDocumentGenerator:
         self.add_summary_paragraph(doc, self.prepared_data["summary_text"])
         self.add_summary_table(doc, self.prepared_data["summary_header"], self.prepared_data["summary_table"])
         
+        if self.prepared_data["summary_table"][1][2] == "0,0":
+            return "нет данных", "нет данных", "нет данных"
+        
         if self.prepared_data.get("country_table_data"):
             self.add_country_table(
                 doc,
@@ -64,7 +67,7 @@ class TradeDocumentGenerator:
             self.prepared_data["import_table_measure"]
         )
 
-        return doc, self.prepared_data["file_name"]
+        return doc, self.prepared_data["filename"], self.prepared_data["short_filename"]
 
     # Установка стиля текста
     def set_run_style(self, run):
@@ -525,7 +528,7 @@ def generate_trade_document(
 
     tradeDataFetcher = TradeDataFetcher(conn)
     if not tradeDataFetcher.is_data_exists(country_or_group, region, year, month_range):
-        exit("Данных нет")
+        return "нет данных", "нет данных", "нет данных"
 
     tradeDataPreparer = TradeDataPreparer(conn, region, country_or_group, year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range)
     
@@ -533,5 +536,7 @@ def generate_trade_document(
     
     tradeDocumentGenerator = TradeDocumentGenerator(data_for_doc)
     
-    doc, filename = tradeDocumentGenerator.generate()
-    return doc, filename
+    doc, filename, short_filename = tradeDocumentGenerator.generate()
+    if filename == "нет данных":
+        return "нет данных", "нет данных", "нет данных"
+    return doc, filename, short_filename
