@@ -37,7 +37,7 @@ class TradeDocumentGenerator:
         self.add_summary_table(doc, self.prepared_data["summary_header"], self.prepared_data["summary_table"])
         
         if self.prepared_data["summary_table"][1][2] == "0,0":
-            return "нет данных", "нет данных", "нет данных"
+            return "Данных нет", "Данных нет", "Данных нет"
         
         if self.prepared_data.get("country_table_data"):
             self.add_country_table(
@@ -528,7 +528,7 @@ def generate_trade_document(
 
     tradeDataFetcher = TradeDataFetcher(conn)
     if not tradeDataFetcher.is_data_exists(country_or_group, region, year, month_range):
-        return "нет данных", "нет данных", "нет данных"
+        return "Данных нет", "Данных нет", "Данных нет"
 
     tradeDataPreparer = TradeDataPreparer(conn, region, country_or_group, year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range)
     
@@ -537,6 +537,6 @@ def generate_trade_document(
     tradeDocumentGenerator = TradeDocumentGenerator(data_for_doc)
     
     doc, filename, short_filename = tradeDocumentGenerator.generate()
-    if filename == "нет данных":
-        return "нет данных", "нет данных", "нет данных"
+    if filename == "Данных нет":
+        return "Данных нет", "Данных нет", "Данных нет"
     return doc, filename, short_filename

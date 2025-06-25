@@ -49,7 +49,7 @@ def main():
     tradeDocumentGenerator = TradeDocumentGenerator(data_for_doc)
     
     doc, filename, short_filename = tradeDocumentGenerator.generate()
-    if filename == "нет данных":
+    if filename == "Данных нет":
         exit(filename)
     doc.save(filename)
 
