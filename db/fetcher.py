@@ -54,9 +54,9 @@ class TradeDataFetcher:
         return months
 
 
-    def get_tn_ved_list(self, digit, category=None):
+    def get_tn_ved_list(self, digit=None, category=None):
         if category:
-            rows = self.execute_query(GET_TN_VEDS_BY_CATEGORY, (category, digit))
+            rows = self.execute_query(GET_TN_VEDS_BY_CATEGORY, (category,))
         else:
             rows = self.execute_query(GET_TN_VEDS_BY_DIGIT, (digit,))
         return [row[0] for row in rows]
@@ -76,8 +76,8 @@ class TradeDataFetcher:
         return results
 
 
-    def fetch_trade_data_category(self, region, country, country_list, year, months, digit, tn_veds):
-        params = (country, country_list, region, year, months, digit, tn_veds)
+    def fetch_trade_data_category(self, region, country, country_list, year, months, digit, tn_veds, group_digit):
+        params = (group_digit, country, country_list, region, year, months, digit, tn_veds, group_digit, group_digit)
         rows = self.execute_query(FETCH_TRADE_DATA_CATEGORY, params)
 
         columns = [
@@ -114,3 +114,7 @@ class TradeDataFetcher:
             if input_month > last_db_month:
                 return False
             return True
+
+
+    def get_digit_category(self, category):
+        return 6

@@ -41,17 +41,20 @@ class TradeDataPreparer:
         
         if self.category:
             category_text = f", {self.category}"
-            tn_veds_category = fetcher.get_tn_ved_list(6, self.category)
+            tn_veds_category = fetcher.get_tn_ved_list(category=self.category)
+            category_digit = len(tn_veds_category[0])
+
             if self.digit == 4:
-                tn_veds = list(set(num[:-2] for num in tn_veds_category))
+                tn_veds = list(set(num[:4] for num in tn_veds_category))
                 base_year_data = fetcher.fetch_trade_data_category(
                     self.region,
                     self.country_or_group,
                     countries,
                     self.year,
                     months,
-                    6,
-                    tn_veds_category
+                    category_digit,
+                    tn_veds_category,
+                    self.digit
                 )
                 target_year_data = fetcher.fetch_trade_data_category(
                     self.region,
@@ -59,8 +62,9 @@ class TradeDataPreparer:
                     countries,
                     self.year - 1,
                     months,
-                    6,
-                    tn_veds_category
+                    category_digit,
+                    tn_veds_category,
+                    self.digit
                 )
                 table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
                 table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
@@ -68,25 +72,26 @@ class TradeDataPreparer:
                 table_data_import_reverse = transformer.get_table_data("import", target_year_data, base_year_data)
                 table_data_export_reverse = transformer.get_table_data("export", target_year_data, base_year_data)
             elif self.digit == 6:
-                tn_veds = fetcher.get_tn_ved_list(self.digit, self.category)
-
-                base_year_data = fetcher.fetch_trade_data(
+                tn_veds = list(set(num[:6] for num in tn_veds_category))
+                base_year_data = fetcher.fetch_trade_data_category(
                     self.region,
                     self.country_or_group,
                     countries,
                     self.year,
                     months,
-                    6,
-                    tn_veds_category
+                    category_digit,
+                    tn_veds_category,
+                    self.digit
                 )
-                target_year_data = fetcher.fetch_trade_data(
+                target_year_data = fetcher.fetch_trade_data_category(
                     self.region,
                     self.country_or_group,
                     countries,
                     self.year - 1,
                     months,
-                    6,
-                    tn_veds_category
+                    category_digit,
+                    tn_veds_category,
+                    self.digit
                 )
 
                 table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
@@ -100,7 +105,7 @@ class TradeDataPreparer:
                 countries,
                 self.year,
                 months,
-                6,
+                category_digit,
                 tn_veds_category
             )
 
@@ -124,7 +129,7 @@ class TradeDataPreparer:
             }
 
         else:
-            tn_veds = fetcher.get_tn_ved_list(self.digit)
+            tn_veds = fetcher.get_tn_ved_list(digit=self.digit)
             category_text = ""
 
 

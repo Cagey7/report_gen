@@ -47,7 +47,7 @@ SELECT v.code
 FROM tn_veds v
 JOIN tn_ved_category_map m ON v.id = m.tn_ved_id
 JOIN tn_ved_categories c ON m.tn_ved_category_id = c.id
-WHERE c.name = %s AND v.digit = %s;
+WHERE c.name = %s;
 """
 
 GET_TN_VEDS_BY_DIGIT = """
@@ -84,7 +84,7 @@ GROUP BY r.name, tv.code, tv.name, tv.measure, d.year;
 FETCH_TRADE_DATA_CATEGORY = """
 WITH grouped AS (
     SELECT
-        LEFT(tv.code, 4)           AS tn_ved_code,
+        LEFT(tv.code, %s)           AS tn_ved_code,
         %s                         AS country_name,
         r.name                     AS region_name,
         d.year,
@@ -108,7 +108,7 @@ WITH grouped AS (
       AND tv.digit  = %s
       AND tv.code   = ANY(%s)
 
-    GROUP BY LEFT(tv.code, 4), r.name, d.year
+    GROUP BY LEFT(tv.code, %s), r.name, d.year
 )
 
 SELECT
@@ -129,7 +129,7 @@ SELECT
 FROM grouped g
 JOIN tn_veds tv4
   ON tv4.code  = g.tn_ved_code
- AND tv4.digit = 4;
+ AND tv4.digit = %s;
 """
 
 
