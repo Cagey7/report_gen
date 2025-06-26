@@ -27,34 +27,34 @@ class TextDataPreparer:
         year_str = f"{year} {'год' if month_str == '' else 'года'}"
         if direction == "total":
             subject = f"{direction_ru} между {region_cases[region]['творительный']} и {country_cases[country]['творительный']}"
-            if change > 0:
-                return f"{subject} за {month_str}{year_str} составил {base_year_sum} {units} долл. США, что на {format_percent(percent, False)} больше, чем за аналогичный период предыдущего года {target_year_sum} {units} долл. США)."
+            if 0 < change < 100:
+                return f"{subject} за {month_str}{year_str} составил {base_year_sum} {units} долл. США, что на {format_percent(percent, False)} больше, чем за аналогичный период предыдущего года ({target_year_sum} {units} долл. США)."
             elif change < 0:
-                return f"{subject} за {month_str}{year_str} составил {base_year_sum} {units} долл. США, что на {format_percent(percent, False)} ниже, чем за аналогичный период предыдущего года {target_year_sum} {units} долл. США)."
+                return f"{subject} за {month_str}{year_str} составил {base_year_sum} {units} долл. США, что на {format_percent(percent, False)} ниже, чем за аналогичный период предыдущего года ({target_year_sum} {units} долл. США)."
             elif change > 100:
-                return f"{subject} за {month_str}{year_str} составил {base_year_sum} {units} долл. США, увеличился {format_percent(percent, False)}, чем за аналогичный период предыдущего года {target_year_sum} {units} долл. США)."
+                return f"{subject} за {month_str}{year_str} составил {base_year_sum} {units} долл. США, увеличился {format_percent(percent, False)[5:]}, чем за аналогичный период предыдущего года ({target_year_sum} {units} долл. США)."
             else:
                 return f"{subject} за {month_str}{year_str} составил {base_year_sum} {units} долл. США."
         
         if direction == "export":
             subject = f"{direction_ru} из {region_cases[region]['родительный']} в {country_cases[country]['винительный']}"
-            if change > 0:
-                return f"{subject} за {month_str}{year_str}, вырос на {format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+            if 0 < change < 100:
+                return f"{subject} за {month_str}{year_str} вырос на {format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
             elif change < 0:
-                return f"{subject} за {month_str}{year_str}, снизнился на {format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+                return f"{subject} за {month_str}{year_str} снизился на {format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
             elif change > 100:
-                return f"{subject} за {month_str}{year_str}, увеличился {format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+                return f"{subject} за {month_str}{year_str} увеличился {format_percent(percent, False)[5:]} и составил {base_year_sum} {units} долл. США."
             else:
                 return f"{subject} за {month_str}{year_str} составил {base_year_sum} {units} долл. США."
 
         if direction == "import":
-            subject = f"{direction_ru} в {region_cases[region]['винительный']} из {country_cases[country]['творительный']}"
-            if change > 0:
-                return f"{subject} за {month_str}{year_str}, вырос на {format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+            subject = f"{direction_ru} в {region_cases[region]['винительный']} из {country_cases[country]['родительный']}"
+            if 0 < change < 100:
+                return f"{subject} за {month_str}{year_str} вырос на {format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
             elif change < 0:
-                return f"{subject} за {month_str}{year_str}, снизнился на {format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+                return f"{subject} за {month_str}{year_str} снизился на {format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
             elif change > 100:
-                return f"{subject} за {month_str}{year_str}, увеличился {format_percent(percent, False)} и составил {base_year_sum} {units} долл. США."
+                return f"{subject} за {month_str}{year_str} увеличился {format_percent(percent, False)[5:]} и составил {base_year_sum} {units} долл. США."
             else:
                 return f"{subject} за {month_str}{year_str} составил {base_year_sum} {units} долл. США."
 
@@ -141,7 +141,7 @@ class TextDataPreparer:
                     f"{', '.join(row_growth_text)}."
                 )
                 decline_text = (
-                    f"Вместе с тем, наблюдается снижение экспортных поставок таких товаров, как: "
+                    f"Вместе с тем наблюдается снижение экспортных поставок таких товаров, как: "
                     f"{', '.join(rows_decline_text)}."
                 )
                 
@@ -162,7 +162,7 @@ class TextDataPreparer:
                 )
                 
                 growth_text = (
-                    f"Вместе с тем, наблюдается рост поставок таких товаров, как: "
+                    f"Вместе с тем наблюдается рост поставок таких товаров, как: "
                     f"{', '.join(row_growth_text)}."
                 )
 
@@ -210,7 +210,7 @@ class TextDataPreparer:
                     f"{', '.join(row_growth_text)}."
                 )
                 decline_text = (
-                    f"Вместе с тем, наблюдается снижение импортных поставок таких товаров, как: "
+                    f"Вместе с тем наблюдается снижение импортных поставок таких товаров, как: "
                     f"{', '.join(rows_decline_text)}."
                 )
                 if row_growth_text == []:
@@ -224,12 +224,12 @@ class TextDataPreparer:
                     import_text.append(decline_text)
             else:
                 decline_text = (
-                    f"Сокращение импорта в {region_cases[region]['родительный']} обосновывается снижением поставок таких товаров, как: "
+                    f"Сокращение импорта в {region_cases[region]['винительный']} обосновывается снижением поставок таких товаров, как: "
                     f"{', '.join(rows_decline_text)}."
                 )
 
                 growth_text = (
-                    f"Вместе с тем, наблюдается рост поставок таких товаров, как: "
+                    f"Вместе с тем наблюдается рост поставок таких товаров, как: "
                     f"{', '.join(row_growth_text)}."
                 )
 

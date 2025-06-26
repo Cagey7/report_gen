@@ -189,7 +189,7 @@ class TradeDataPreparer:
             
         data_for_doc["document_header"] = (
             f"Взаимная торговля {region_cases[self.region]['родительный']} "
-            f"с {country_cases[self.country_or_group]['творительный']} "
+            f"{s_or_so(self.country_or_group)} {country_cases[self.country_or_group]['творительный']} "
             f"за {format_month_range(months)}{self.year} "
             f"{'год' if months[-1] == 12 else 'года'}"
         )
@@ -220,7 +220,7 @@ class TradeDataPreparer:
         data_for_doc["summary_header"] = (
             f"Показатели взаимной торговли "
             f"{region_cases[self.region]['родительный']} "
-            f"с {country_cases[self.country_or_group]['творительный']}"
+            f"{s_or_so(self.country_or_group)} {country_cases[self.country_or_group]['творительный']}"
         )
 
         data_for_doc["summary_table"] = tableDataPreparer.build_main_table(
@@ -321,7 +321,7 @@ class TradeDataPreparer:
         data_for_doc["filename"] = (
             f'Справка по торговле '
             f'{region_cases[self.region]["родительный"]} '
-            f'с {country_cases[self.country_or_group]["творительный"]} '
+            f'{s_or_so(self.country_or_group)} {country_cases[self.country_or_group]["творительный"]} '
             f'({format_month_range(months)}{self.year} '
             f'{"год" if months[-1] == 12 else "года"})'
             f'{category_text}'
