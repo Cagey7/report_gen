@@ -255,23 +255,34 @@ class TextDataPreparer:
     def gen_decline_growth_text(self, trand, data, text_size, exclude_tn_veds):
         sorted_data = sorted(data, key=lambda x: x["abs_change"], reverse=False)
         text_block = []
-        for row in sorted_data[:text_size]:
+        count = 0
+
+        for row in sorted_data:
             if row["tn_ved_code"] in exclude_tn_veds:
                 continue
             result = self.gen_decline_growth_row(row, trand)
             if result is not None:
                 text_block.append(result)
-        
+                count += 1
+
+            if count >= text_size:
+                break
+            
         return text_block
 
 
     def gen_main_text(self, data, text_size, exclude_tn_veds):
         row_main_text = []
-        for row in data[:text_size]:
+        count = 0
+
+        for row in data:
             if row["tn_ved_code"] in exclude_tn_veds:
                 continue
             result = self.gen_summary_row(row)
             if result is not None:
                 row_main_text.append(result)
-        
+                count += 1
+            if count >= text_size:
+                break
+
         return row_main_text

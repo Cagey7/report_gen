@@ -1,5 +1,3 @@
-# db/queries.py
-
 GET_COUNTRY_GROUPS = """
 SELECT name FROM country_groups;
 """

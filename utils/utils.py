@@ -151,20 +151,9 @@ def get_short_period(period):
     words = period.split("–")
     if len(words) == 1:
         return period
-    return "-".join(word[:3] for word in words)
+    return "-".join(word[:3] for word in words) + " "
 
 
 def s_or_so(word):
     word = word.strip().lower()
-    vowels = "аеёиоуыэюя"
-    
-    if len(word) >= 2:
-        first, second = word[0], word[1]
-        
-        if first in {"с", "з"}:
-            return "со"
-        
-        if first not in vowels and second not in vowels:
-            return "со"
-    
-    return "с"
+    return "со" if word.startswith("стран") else "с"

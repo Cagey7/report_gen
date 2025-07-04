@@ -90,7 +90,8 @@ class TableDataPreparer:
         table_data.append(sum_row)
         
         index = 1
-        for row in data[:table_size]:
+        count = 0
+        for row in data:
             if row["tn_ved_code"] in exclude_tn_veds:
                 continue
             name = f"{index}. {row['tn_ved_name']} (код {row['tn_ved_code']} ТНВЭД), {row['measure']}"
@@ -123,6 +124,11 @@ class TableDataPreparer:
                 growth_value = "new"
             row_data = [name, target_volume, target_year_value, target_year_share, base_volume, base_year_value, base_year_share, growth_volume, growth_value]
             table_data.append(row_data)
+
+            count += 1
+            if count >= table_size:
+                break
+
         return table_data
     
     

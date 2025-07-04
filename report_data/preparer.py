@@ -1,6 +1,3 @@
-import os
-import psycopg2
-from dotenv import load_dotenv
 from db.fetcher import TradeDataFetcher
 from data_transform.transformer import TradeDataTransformer
 from table_data.preparer import TableDataPreparer
@@ -130,6 +127,7 @@ class TradeDataPreparer:
 
         else:
             tn_veds = fetcher.get_tn_ved_list(digit=self.digit)
+            # tn_veds = ["8606"]
             category_text = ""
 
 
@@ -332,7 +330,7 @@ class TradeDataPreparer:
         data_for_doc["short_filename"] = (
             f'{short_regions[self.region]} '
             f'- {country_cases[self.country_or_group]["именительный"][:15]} '
-            f'({get_short_period(format_month_range(months))} {self.year})'
+            f'({get_short_period(format_month_range(months))}{self.year})'
             f'{" " + str(self.digit) + " зн. " if self.digit != 4 else ""}'
             f'{category_text[2:]}'
             f'.docx'
