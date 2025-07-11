@@ -62,8 +62,10 @@ class TradeDataFetcher:
         return [row[0] for row in rows]
 
 
-    def fetch_trade_data(self, region, country, country_list, year, months, digit, tn_veds):
-        params = (country, country_list, region, year, months, digit, tn_veds)
+    def fetch_trade_data(self, region, country, country_list, months, digit, tn_veds, year_start, year_end=None):
+        if year_end is None:
+            year_end = year_start
+        params = (country, country_list, region, year_start, year_end, months, digit, tn_veds)
         rows = self.execute_query(FETCH_TRADE_DATA, params)
 
         columns = [
@@ -76,8 +78,10 @@ class TradeDataFetcher:
         return results
 
 
-    def fetch_trade_data_category(self, region, country, country_list, year, months, digit, tn_veds, group_digit):
-        params = (group_digit, country, country_list, region, year, months, digit, tn_veds, group_digit, group_digit)
+    def fetch_trade_data_category(self, region, country, country_list, months, digit, tn_veds, group_digit, year_start, year_end=None):
+        if year_end is None:
+            year_end = year_start
+        params = (group_digit, country, country_list, region, year_start, year_end, months, digit, tn_veds, group_digit, group_digit)
         rows = self.execute_query(FETCH_TRADE_DATA_CATEGORY, params)
 
         columns = [
@@ -115,6 +119,3 @@ class TradeDataFetcher:
                 return False
             return True
 
-
-    def get_digit_category(self, category):
-        return 6

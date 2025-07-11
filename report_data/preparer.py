@@ -10,7 +10,7 @@ from utils.utils import *
 
 
 class TradeDataPreparer:
-    def __init__(self, conn, region, country_or_group, year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range):
+    def __init__(self, conn, region, country_or_group, year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range, long_report):
         self.conn = conn
         self.region = region
         self.country_or_group = country_or_group
@@ -22,6 +22,7 @@ class TradeDataPreparer:
         self.country_table_size = country_table_size
         self.exclude_tn_veds = exclude_tn_veds
         self.month_range = month_range
+        self.long_report = long_report
         
 
     def prepare(self):
@@ -41,61 +42,56 @@ class TradeDataPreparer:
             tn_veds_category = fetcher.get_tn_ved_list(category=self.category)
             category_digit = len(tn_veds_category[0])
 
-            if self.digit == 4:
-                tn_veds = list(set(num[:4] for num in tn_veds_category))
-                base_year_data = fetcher.fetch_trade_data_category(
-                    self.region,
-                    self.country_or_group,
-                    countries,
-                    self.year,
-                    months,
-                    category_digit,
-                    tn_veds_category,
-                    self.digit
-                )
-                target_year_data = fetcher.fetch_trade_data_category(
-                    self.region,
-                    self.country_or_group,
-                    countries,
-                    self.year - 1,
-                    months,
-                    category_digit,
-                    tn_veds_category,
-                    self.digit
-                )
-                table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
-                table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
-                
-                table_data_import_reverse = transformer.get_table_data("import", target_year_data, base_year_data)
-                table_data_export_reverse = transformer.get_table_data("export", target_year_data, base_year_data)
-            elif self.digit == 6:
-                tn_veds = list(set(num[:6] for num in tn_veds_category))
-                base_year_data = fetcher.fetch_trade_data_category(
-                    self.region,
-                    self.country_or_group,
-                    countries,
-                    self.year,
-                    months,
-                    category_digit,
-                    tn_veds_category,
-                    self.digit
-                )
-                target_year_data = fetcher.fetch_trade_data_category(
-                    self.region,
-                    self.country_or_group,
-                    countries,
-                    self.year - 1,
-                    months,
-                    category_digit,
-                    tn_veds_category,
-                    self.digit
-                )
+            if self.digit in (4, 6):
+                tn_len = self.digit
+                tn_veds = list(set(num[:tn_len] for num in tn_veds_category))
 
-                table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
-                table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
-                
-                table_data_import_reverse = transformer.get_table_data("import", target_year_data, base_year_data)
-                table_data_export_reverse = transformer.get_table_data("export", target_year_data, base_year_data)
+                if self.long_report:
+                    long_report_months = list(range(1, 13))
+                    if len(months) == 12:
+                        all_years_data_full_year = fetcher.fetch_trade_data_category(
+                            self.region,
+                            self.country_or_group,
+                            countries,
+                            long_report_months,
+                            category_digit,
+                            tn_veds_category,
+                            self.digit,
+                            self.year - 5,
+                            self.year
+                        )
+                    else:
+                        all_years_data_full_year = fetcher.fetch_trade_data_category(
+                            self.region,
+                            self.country_or_group,
+                            countries,
+                            long_report_months,
+                            category_digit,
+                            tn_veds_category,
+                            self.digit,
+                            self.year - 6,
+                            self.year - 1
+                        )
+
+            all_years_data = fetcher.fetch_trade_data_category(
+                self.region,
+                self.country_or_group,
+                countries,
+                months,
+                category_digit,
+                tn_veds_category,
+                self.digit,
+                self.year - 1,
+                self.year
+            )
+
+            target_year_data = [row for row in all_years_data if row["year"] == self.year - 1]
+            base_year_data = [row for row in all_years_data if row["year"] == self.year]
+
+            table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
+            table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
+            table_data_import_reverse = transformer.get_table_data("import", target_year_data, base_year_data)
+            table_data_export_reverse = transformer.get_table_data("export", target_year_data, base_year_data)
 
             country_trade_data = fetcher.fetch_country_trade_data(
                 self.region,
@@ -130,25 +126,46 @@ class TradeDataPreparer:
             # tn_veds = ["8606"]
             category_text = ""
 
-
-            base_year_data = fetcher.fetch_trade_data(
+            if self.long_report:
+                long_report_months = list(range(1, 13))
+                if len(months) == 12:
+                    all_years_data_full_year = fetcher.fetch_trade_data(
+                        self.region,
+                        self.country_or_group,
+                        countries,
+                        long_report_months,
+                        self.digit,
+                        tn_veds,
+                        self.year - 5,
+                        self.year
+                    )
+                else:
+                    all_years_data_full_year = fetcher.fetch_trade_data(
+                        self.region,
+                        self.country_or_group,
+                        countries,
+                        long_report_months,
+                        self.digit,
+                        tn_veds,
+                        self.year - 6,
+                        self.year - 1
+                    )
+            
+            
+            all_years_data = fetcher.fetch_trade_data(
                 self.region,
                 self.country_or_group,
                 countries,
-                self.year,
                 months,
                 self.digit,
-                tn_veds
-            )
-            target_year_data = fetcher.fetch_trade_data(
-                self.region,
-                self.country_or_group,
-                countries,
+                tn_veds,
                 self.year - 1,
-                months,
-                self.digit,
-                tn_veds
+                self.year
             )
+
+            target_year_data = [row for row in all_years_data if row["year"] == self.year - 1]
+            base_year_data = [row for row in all_years_data if row["year"] == self.year]
+
             country_trade_data = fetcher.fetch_country_trade_data(
                 self.region,
                 countries,
@@ -223,13 +240,17 @@ class TradeDataPreparer:
 
         data_for_doc["summary_table"] = tableDataPreparer.build_main_table(
             self.year,
+            months,
             export_data_sum,
             import_data_sum,
             total_data_sum,
             main_table_divider,
             main_table_measure
         )
-        
+
+        if self.long_report:
+            data_for_doc["trade_dynamics_table"] = tableDataPreparer.build_trade_dynamics_table(all_years_data_full_year, main_table_divider, main_table_measure)
+
         if len(countries) > 1:
             country_table_units, country_table_data = tableDataPreparer.build_country_table_table(
                 country_trade_data,

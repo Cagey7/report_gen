@@ -18,6 +18,7 @@ def main():
     table_size = int(os.getenv("TABLE_SIZE")) or 25
     country_table_size = int(os.getenv("COUNTRY_TABLE_SIZE")) or 15
     exclude_raw = os.getenv("EXCLUDE_TN_VEDS") or ""
+    long_report = int(os.getenv("LONG_REPORT")) or 0
     exclude_tn_veds = [item.strip() for item in exclude_raw.split(",") if item.strip()]
 
     month_range_raw = os.getenv("MONTH_RANGE") or ""
@@ -42,7 +43,20 @@ def main():
     if not tradeDataFetcher.is_data_exists(country_or_group, region, year, month_range):
         exit("Данных нет")
 
-    tradeDataPreparer = TradeDataPreparer(conn, region, country_or_group, year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range)
+    tradeDataPreparer = TradeDataPreparer(
+        conn,
+        region,
+        country_or_group,
+        year,
+        digit,
+        category,
+        text_size,
+        table_size,
+        country_table_size,
+        exclude_tn_veds,
+        month_range,
+        long_report
+    )
     
     data_for_doc = tradeDataPreparer.prepare()
     

@@ -1,7 +1,7 @@
 from utils.utils import *
 
 class TableDataPreparer:
-    def build_main_table(self, year, export_sum, import_sum, total_sum, div, units):
+    def build_main_table(self, year, months, export_sum, import_sum, total_sum, div, units):
         base_balance = export_sum["base_year_sum"] - import_sum["base_year_sum"]
         target_balance = export_sum["target_year_sum"] - import_sum["target_year_sum"]
 
@@ -13,8 +13,8 @@ class TableDataPreparer:
 
         header = [
             f"{units} долл. США",
-            f"{year - 1}",
-            f"{year}",
+            f"{year-1}" if len(months) == 12 else f"{year-1}\n{format_month_range(months)}",
+            f"{year}"   if len(months) == 12 else f"{year}\n{format_month_range(months)}",
             f"Прирост {year - 1}/{year}"
         ]
 
@@ -191,3 +191,27 @@ class TableDataPreparer:
 
         return units, final_table_data
 
+
+    def build_trade_dynamics_table(self, data, div, units):
+        summary = {}
+        for row in data:
+            year = row["year"]
+            if year not in summary:
+                summary[year] = {"export": 0, "import": 0}
+            summary[year]["export"] += row.get("export_value", 0) or 0
+            summary[year]["import"] += row.get("import_value", 0) or 0
+
+        years = sorted(summary.keys())
+
+        header = [f"{units} долл. США"] + years
+        turnover_row = ["Товарооборот"] + [
+            smart_round((summary[y]["export"] + summary[y]["import"]) / div) for y in years
+        ]
+        export_row = ["Экспорт"] + [
+            smart_round(summary[y]["export"] / div) for y in years
+        ]
+        import_row = ["Импорт"] + [
+            smart_round(summary[y]["import"] / div) for y in years
+        ]
+
+        return [header, turnover_row, export_row, import_row]

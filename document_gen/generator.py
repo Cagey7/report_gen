@@ -36,6 +36,10 @@ class TradeDocumentGenerator:
         self.add_summary_paragraph(doc, self.prepared_data["summary_text"])
         self.add_summary_table(doc, self.prepared_data["summary_header"], self.prepared_data["summary_table"])
         
+        if self.prepared_data.get("trade_dynamics_table"):
+            self.generate_trade_dynamics_table(doc, self.prepared_data["trade_dynamics_table"])
+
+
         if self.prepared_data["summary_table"][1][2] == "0,0":
             return "Данных нет", "Данных нет", "Данных нет"
         
@@ -494,6 +498,49 @@ class TradeDocumentGenerator:
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
                 for paragraph in cell.paragraphs:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+
+    def generate_trade_dynamics_table(self, doc, table_data):
+        if not table_data or len(table_data) < 2:
+            return
+
+        doc.add_paragraph().paragraph_format.space_after = Pt(6)
+
+        paragraph = doc.add_paragraph()
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        paragraph.paragraph_format.space_after = Pt(0)
+        self.format_paragraph(paragraph, first_line_indent=False)
+        
+        run = paragraph.add_run("Динамика товарооборота по годам")
+        run.italic = True
+        self.set_run_style(run)
+
+        rows = len(table_data)
+        cols = len(table_data[0])
+        table = doc.add_table(rows=rows, cols=cols)
+        table.style = 'Table Grid'
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        for i, row in enumerate(table_data):
+            for j, value in enumerate(row):
+                cell = table.cell(i, j)
+                cell.text = str(value)
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = paragraph.runs[0]
+                    run.font.name = 'Times New Roman'
+                    run.font.size = Pt(12)
+                    if i == 0:
+                        run.bold = True
+                    elif i == 1:
+                        run.bold = True
+
+                if i == 0:
+                    self.set_cell_background(cell, "D9D9D9")
+
+                self.add_cell_vertical_padding(cell, space_pts=2)
 
 
 def generate_trade_document(
