@@ -5,7 +5,7 @@ from utils.utils import *
 
 
 class TextDataPreparer:
-    def gen_summary_text(self, direction, country, region, year, months, sum_data, div, units):
+    def gen_summary_text(self, direction, country, region, start_year, end_year, months, sum_data, div, units):
         base_year_sum = smart_round(sum_data["base_year_sum"]/div)
         target_year_sum = smart_round(sum_data["target_year_sum"]/div)
         if sum_data["base_year_sum"] == 0 and sum_data["target_year_sum"] == 0:
@@ -24,7 +24,8 @@ class TextDataPreparer:
         change = sum_data["growth_value"]
         
         month_str = format_month_range(months)
-        year_str = f"{year} {'год' if month_str == '' else 'года'}"
+        period = get_year_period_str(start_year, end_year)
+        year_str = f"{period} {'год' if month_str == '' else 'года'}"
         if direction == "total":
             subject = f"{direction_ru} между {region_cases[region]['творительный']} и {country_cases[country]['творительный']}"
             if 0 < change < 100:
@@ -111,14 +112,14 @@ class TextDataPreparer:
         return f"{name} – {smart_round(formatted_value)} {units} долл. США (с долей {format_percent(share, False)})"
 
 
-    def gen_text_flow(self, direction, year, months, data, data_reverse, sum_data, region, country_or_group, exclude_tn_veds, text_size, div, units):
-        
+    def gen_text_flow(self, direction, start_year, end_year, months, data, data_reverse, sum_data, region, country_or_group, exclude_tn_veds, text_size, div, units):
+        period = get_year_period_str(start_year, end_year)
         if direction == "export":
             export_text = []
 
-            summary_text = self.gen_summary_text(direction, country_or_group, region, year, months, sum_data, div, units)
+            summary_text = self.gen_summary_text(direction, country_or_group, region, start_year, end_year, months, sum_data, div, units)
             if summary_text == "":
-                return [f"Экспорт в {year} году в {region_cases[region]['винительный']} за отчетный период отсутствовал."]
+                return [f"Экспорт в {period} году в {region_cases[region]['винительный']} за отчетный период отсутствовал."]
             export_text.append(summary_text)
 
             rows_decline_text = self.gen_decline_growth_text("decline", data_reverse, text_size, exclude_tn_veds)
@@ -132,7 +133,7 @@ class TextDataPreparer:
                 f"{', '.join(row_main_text)}."
             )
             
-            info_text = f"Более подробная информация по основным экспортируемым товарам в {country_cases[country_or_group]['винительный']} за {format_month_range(months)}{year} {'год' if months[-1] == 12 else 'года'} показана в Таблице №1."
+            info_text = f"Более подробная информация по основным экспортируемым товарам в {country_cases[country_or_group]['винительный']} за {format_month_range(months)}{period} {'год' if months[-1] == 12 else 'года'} показана в Таблице №1."
             
 
             if sum_data["base_year_sum"] > sum_data["target_year_sum"]:
@@ -187,9 +188,9 @@ class TextDataPreparer:
         
         if direction == "import":
             import_text = []
-            summary_text = self.gen_summary_text(direction, country_or_group, region, year, months, sum_data, div, units)
+            summary_text = self.gen_summary_text(direction, country_or_group, region, start_year, end_year, months, sum_data, div, units)
             if summary_text == "":
-                return [f"Импорт в {year} году из {region_cases[region]['винительный']} за отчетный период отсутствовал."]
+                return [f"Импорт в {period} году из {region_cases[region]['винительный']} за отчетный период отсутствовал."]
             import_text.append(summary_text)
 
 
@@ -202,7 +203,7 @@ class TextDataPreparer:
                 f"{', '.join(row_main_text)}."
             )
             
-            info_text = f"Более подробная информация по основным импортируемым товарам из {country_cases[country_or_group]['родительный']} за {format_month_range(months)}{year} {'год' if months[-1] == 12 else 'года'} показана в Таблице №2."
+            info_text = f"Более подробная информация по основным импортируемым товарам из {country_cases[country_or_group]['родительный']} за {format_month_range(months)}{period} {'год' if months[-1] == 12 else 'года'} показана в Таблице №2."
             
             if sum_data["base_year_sum"] > sum_data["target_year_sum"]:
                 growth_text = (

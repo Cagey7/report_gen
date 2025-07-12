@@ -157,3 +157,12 @@ def get_short_period(period):
 def s_or_so(word):
     word = word.strip().lower()
     return "со" if word.startswith("стран") else "с"
+
+
+def get_year_period_str(start_year, end_year):
+    period = (
+        f"{end_year}"
+        if end_year - start_year == 1
+        else f"{start_year}-{end_year}"
+    )
+    return period

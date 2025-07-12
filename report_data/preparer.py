@@ -10,11 +10,12 @@ from utils.utils import *
 
 
 class TradeDataPreparer:
-    def __init__(self, conn, region, country_or_group, year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range, long_report):
+    def __init__(self, conn, region, country_or_group, start_year, end_year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range, long_report):
         self.conn = conn
         self.region = region
         self.country_or_group = country_or_group
-        self.year = year
+        self.start_year = start_year
+        self.end_year = end_year
         self.digit = digit
         self.category = category
         self.text_size = text_size
@@ -33,7 +34,7 @@ class TradeDataPreparer:
         countries = fetcher.get_country_list(self.country_or_group)
             
         if self.month_range == []:
-            months = fetcher.get_max_month_list(self.region, countries, self.year)
+            months = fetcher.get_max_month_list(self.region, countries, self.end_year)
         else:
             months = self.month_range
         
@@ -57,8 +58,8 @@ class TradeDataPreparer:
                             category_digit,
                             tn_veds_category,
                             self.digit,
-                            self.year - 5,
-                            self.year
+                            self.end_year - 5,
+                            self.end_year
                         )
                     else:
                         all_years_data_full_year = fetcher.fetch_trade_data_category(
@@ -69,8 +70,8 @@ class TradeDataPreparer:
                             category_digit,
                             tn_veds_category,
                             self.digit,
-                            self.year - 6,
-                            self.year - 1
+                            self.end_year - 6,
+                            self.end_year - 1
                         )
 
             all_years_data = fetcher.fetch_trade_data_category(
@@ -81,12 +82,12 @@ class TradeDataPreparer:
                 category_digit,
                 tn_veds_category,
                 self.digit,
-                self.year - 1,
-                self.year
+                self.start_year,
+                self.end_year
             )
 
-            target_year_data = [row for row in all_years_data if row["year"] == self.year - 1]
-            base_year_data = [row for row in all_years_data if row["year"] == self.year]
+            target_year_data = [row for row in all_years_data if row["year"] == self.start_year]
+            base_year_data = [row for row in all_years_data if row["year"] == self.end_year]
 
             table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
             table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
@@ -96,7 +97,7 @@ class TradeDataPreparer:
             country_trade_data = fetcher.fetch_country_trade_data(
                 self.region,
                 countries,
-                self.year,
+                self.end_year,
                 months,
                 category_digit,
                 tn_veds_category
@@ -136,8 +137,8 @@ class TradeDataPreparer:
                         long_report_months,
                         self.digit,
                         tn_veds,
-                        self.year - 5,
-                        self.year
+                        self.end_year - 5,
+                        self.end_year
                     )
                 else:
                     all_years_data_full_year = fetcher.fetch_trade_data(
@@ -147,8 +148,8 @@ class TradeDataPreparer:
                         long_report_months,
                         self.digit,
                         tn_veds,
-                        self.year - 6,
-                        self.year - 1
+                        self.end_year - 6,
+                        self.end_year - 1
                     )
             
             
@@ -159,17 +160,17 @@ class TradeDataPreparer:
                 months,
                 self.digit,
                 tn_veds,
-                self.year - 1,
-                self.year
+                self.start_year,
+                self.end_year
             )
 
-            target_year_data = [row for row in all_years_data if row["year"] == self.year - 1]
-            base_year_data = [row for row in all_years_data if row["year"] == self.year]
+            target_year_data = [row for row in all_years_data if row["year"] == self.start_year]
+            base_year_data = [row for row in all_years_data if row["year"] == self.end_year]
 
             country_trade_data = fetcher.fetch_country_trade_data(
                 self.region,
                 countries,
-                self.year,
+                self.end_year,
                 months,
                 self.digit,
                 tn_veds
@@ -201,11 +202,13 @@ class TradeDataPreparer:
 
 
         data_for_doc = {}
-            
+
+        period = get_year_period_str(self.start_year, self.end_year)
+
         data_for_doc["document_header"] = (
             f"Взаимная торговля {region_cases[self.region]['родительный']} "
             f"{s_or_so(self.country_or_group)} {country_cases[self.country_or_group]['творительный']} "
-            f"за {format_month_range(months)}{self.year} "
+            f"за {format_month_range(months)}{period} "
             f"{'год' if months[-1] == 12 else 'года'}"
         )
 
@@ -225,7 +228,8 @@ class TradeDataPreparer:
             "total",
              self.country_or_group,
              self.region,
-             self.year,
+             self.start_year,
+             self.end_year,
              months,
              total_data_sum,
              main_table_divider,
@@ -239,7 +243,8 @@ class TradeDataPreparer:
         )
 
         data_for_doc["summary_table"] = tableDataPreparer.build_main_table(
-            self.year,
+            self.start_year,
+            self.end_year,
             months,
             export_data_sum,
             import_data_sum,
@@ -305,7 +310,8 @@ class TradeDataPreparer:
         )
         data_for_doc["import_text"] = textDataPreparer.gen_text_flow(
             "import",
-            self.year,
+            self.start_year,
+            self.end_year,
             months,
             table_data_import,
             table_data_import_reverse,
@@ -320,7 +326,8 @@ class TradeDataPreparer:
 
         data_for_doc["export_text"] = textDataPreparer.gen_text_flow(
             "export",
-            self.year,
+            self.start_year,
+            self.end_year,
             months,
             table_data_export,
             table_data_export_reverse,
@@ -334,14 +341,15 @@ class TradeDataPreparer:
         )
 
         data_for_doc["months"] = months
-        data_for_doc["year"] = self.year
+        data_for_doc["start_year"] = self.start_year
+        data_for_doc["end_year"] = self.end_year
         data_for_doc["export_table_measure"] = export_table_measure
         data_for_doc["import_table_measure"] = import_table_measure
         data_for_doc["filename"] = (
             f'Справка по торговле '
             f'{region_cases[self.region]["родительный"]} '
             f'{s_or_so(self.country_or_group)} {country_cases[self.country_or_group]["творительный"]} '
-            f'({format_month_range(months)}{self.year} '
+            f'({format_month_range(months)}{period} '
             f'{"год" if months[-1] == 12 else "года"})'
             f'{category_text}'
             f'{", " + str(self.digit) + "-знак(ов)" if self.digit != 4 else ""}'
@@ -351,7 +359,7 @@ class TradeDataPreparer:
         data_for_doc["short_filename"] = (
             f'{short_regions[self.region]} '
             f'- {country_cases[self.country_or_group]["именительный"][:15]} '
-            f'({get_short_period(format_month_range(months))}{self.year})'
+            f'({get_short_period(format_month_range(months))}{period} )'
             f'{" " + str(self.digit) + " зн. " if self.digit != 4 else ""}'
             f'{category_text[2:]}'
             f'.docx'

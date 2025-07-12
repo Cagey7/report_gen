@@ -11,7 +11,8 @@ def main():
 
     region = os.getenv("REGION")
     country_or_group = os.getenv("COUNTRY_GROUP")
-    year = int(os.getenv("YEAR"))
+    end_year = int(os.getenv("END_YEAR"))
+    start_year = int(os.getenv("START_YEAR") or end_year - 1)
     digit = int(os.getenv("DIGIT"))
     category = os.getenv("CATEGORY") or None
     text_size = int(os.getenv("TEXT_SIZE")) or 7
@@ -40,14 +41,15 @@ def main():
     )
 
     tradeDataFetcher = TradeDataFetcher(conn)
-    if not tradeDataFetcher.is_data_exists(country_or_group, region, year, month_range):
+    if not tradeDataFetcher.is_data_exists(country_or_group, region, end_year, month_range):
         exit("Данных нет")
 
     tradeDataPreparer = TradeDataPreparer(
         conn,
         region,
         country_or_group,
-        year,
+        start_year,
+        end_year,
         digit,
         category,
         text_size,

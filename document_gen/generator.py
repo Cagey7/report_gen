@@ -59,7 +59,8 @@ class TradeDocumentGenerator:
             self.prepared_data["export_header"],
             self.prepared_data["export_table"],
             self.prepared_data["months"],
-            self.prepared_data["year"],
+            self.prepared_data["start_year"],
+            self.prepared_data["end_year"],
             self.prepared_data["export_table_measure"]
         )
         self.generate_export_import_table(
@@ -67,7 +68,8 @@ class TradeDocumentGenerator:
             self.prepared_data["import_header"],
             self.prepared_data["import_table"],
             self.prepared_data["months"],
-            self.prepared_data["year"],
+            self.prepared_data["start_year"],
+            self.prepared_data["end_year"],
             self.prepared_data["import_table_measure"]
         )
 
@@ -275,7 +277,7 @@ class TradeDocumentGenerator:
                     run.italic = True
 
 
-    def generate_export_import_table(self, doc, table_header, table_data, months, year, units):
+    def generate_export_import_table(self, doc, table_header, table_data, months, start_year, end_year, units):
         if len(table_data) == 1:
             return
         # Удаляем 10-й элемент, если есть
@@ -351,7 +353,7 @@ class TradeDocumentGenerator:
         make_bold(cell)
 
         cell = table.cell(0, 1)
-        cell.text = f"{year-1} год" if months[-1] == 12 else f"{format_month_range(months)}\n{year-1} {'год' if months[-1] == 12 else 'года'}"
+        cell.text = f"{start_year} год" if months[-1] == 12 else f"{format_month_range(months)}\n{start_year} {'год' if months[-1] == 12 else 'года'}"
         merge_cells_horizontally(table, 0, 1, 3)
         for i in range(1, 4):
             set_cell_background(table.cell(0, i))
@@ -359,7 +361,7 @@ class TradeDocumentGenerator:
             make_bold(table.cell(0, i))
 
         cell = table.cell(0, 4)
-        cell.text = f"{year} год" if months[-1] == 12 else f"{format_month_range(months)}\n{year} {'год' if months[-1] == 12 else 'года'}"
+        cell.text = f"{end_year} год" if months[-1] == 12 else f"{format_month_range(months)}\n{end_year} {'год' if months[-1] == 12 else 'года'}"
         merge_cells_horizontally(table, 0, 4, 6)
         for i in range(4, 7):
             set_cell_background(table.cell(0, i))
@@ -367,7 +369,7 @@ class TradeDocumentGenerator:
             make_bold(table.cell(0, i))
 
         cell = table.cell(0, 7)
-        cell.text = f"Прирост\n{year}/{year-1}"
+        cell.text = f"Прирост\n{start_year}/{end_year}"
         merge_cells_horizontally(table, 0, 7, 8)
         for i in range(7, 9):
             set_cell_background(table.cell(0, i))
@@ -546,7 +548,8 @@ class TradeDocumentGenerator:
 def generate_trade_document(
     region,
     country_or_group,
-    year,
+    start_year,
+    end_year,
     digit=4,
     category=None,
     text_size=7,
@@ -574,10 +577,10 @@ def generate_trade_document(
     )
 
     tradeDataFetcher = TradeDataFetcher(conn)
-    if not tradeDataFetcher.is_data_exists(country_or_group, region, year, month_range):
+    if not tradeDataFetcher.is_data_exists(country_or_group, region, end_year, month_range):
         return "Данных нет", "Данных нет", "Данных нет"
 
-    tradeDataPreparer = TradeDataPreparer(conn, region, country_or_group, year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range)
+    tradeDataPreparer = TradeDataPreparer(conn, region, country_or_group, start_year, end_year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range)
     
     data_for_doc = tradeDataPreparer.prepare()
     

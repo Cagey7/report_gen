@@ -1,7 +1,7 @@
 from utils.utils import *
 
 class TableDataPreparer:
-    def build_main_table(self, year, months, export_sum, import_sum, total_sum, div, units):
+    def build_main_table(self, start_year, end_year, months, export_sum, import_sum, total_sum, div, units):
         base_balance = export_sum["base_year_sum"] - import_sum["base_year_sum"]
         target_balance = export_sum["target_year_sum"] - import_sum["target_year_sum"]
 
@@ -13,9 +13,9 @@ class TableDataPreparer:
 
         header = [
             f"{units} долл. США",
-            f"{year-1}" if len(months) == 12 else f"{year-1}\n{format_month_range(months)}",
-            f"{year}"   if len(months) == 12 else f"{year}\n{format_month_range(months)}",
-            f"Прирост {year - 1}/{year}"
+            f"{start_year} год" if months[-1] == 12 else f"{format_month_range(months)}\n{start_year} {'год' if months[-1] == 12 else 'года'}",
+            f"{end_year} год" if months[-1] == 12 else f"{format_month_range(months)}\n{end_year} {'год' if months[-1] == 12 else 'года'}",
+            f"Прирост {start_year}/{end_year}"
         ]
 
         target_year_sum_total = smart_round(total_sum["target_year_sum"]/div)
