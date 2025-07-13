@@ -50,40 +50,43 @@ class TradeDataPreparer:
                 if self.long_report:
                     long_report_months = list(range(1, 13))
                     if len(months) == 12:
-                        all_years_data_full_year = fetcher.fetch_trade_data_category(
+                        all_years_data_full_year = fetcher.fetch_trade_data(
                             self.region,
                             self.country_or_group,
                             countries,
                             long_report_months,
                             category_digit,
                             tn_veds_category,
-                            self.digit,
                             self.end_year - 5,
-                            self.end_year
+                            self.end_year,
+                            group_digit=self.digit,
+                            use_category=True
                         )
                     else:
-                        all_years_data_full_year = fetcher.fetch_trade_data_category(
+                        all_years_data_full_year = fetcher.fetch_trade_data(
                             self.region,
                             self.country_or_group,
                             countries,
                             long_report_months,
                             category_digit,
                             tn_veds_category,
-                            self.digit,
                             self.end_year - 6,
-                            self.end_year - 1
+                            self.end_year - 1,
+                            group_digit=self.digit,
+                            use_category=True
                         )
 
-            all_years_data = fetcher.fetch_trade_data_category(
+            all_years_data = fetcher.fetch_trade_data(
                 self.region,
                 self.country_or_group,
                 countries,
                 months,
                 category_digit,
                 tn_veds_category,
-                self.digit,
                 self.start_year,
-                self.end_year
+                self.end_year,
+                group_digit=self.digit,
+                use_category=True
             )
 
             target_year_data = [row for row in all_years_data if row["year"] == self.start_year]
