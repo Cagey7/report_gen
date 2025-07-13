@@ -22,7 +22,9 @@ class TradeDataTransformer:
 
 
     def calc_growth(self, current, previous):
-        if previous is None or previous == 0:
+        if current == 0 and previous == 0:
+            return None
+        elif previous is None or previous == 0:
             return 100
         elif current is None or current == 0:
             return 0

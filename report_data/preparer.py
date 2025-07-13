@@ -75,6 +75,7 @@ class TradeDataPreparer:
                             group_digit=self.digit,
                             use_category=True
                         )
+                    all_years_data_full_year = aggregate_by_year(all_years_data_full_year)
 
             all_years_data = fetcher.fetch_trade_data(
                 self.region,
@@ -88,6 +89,7 @@ class TradeDataPreparer:
                 group_digit=self.digit,
                 use_category=True
             )
+            all_years_data = aggregate_by_year(all_years_data)
 
             target_year_data = [row for row in all_years_data if row["year"] == self.start_year]
             base_year_data = [row for row in all_years_data if row["year"] == self.end_year]
@@ -154,7 +156,7 @@ class TradeDataPreparer:
                         self.end_year - 6,
                         self.end_year - 1
                     )
-            
+                all_years_data_full_year = aggregate_by_year(all_years_data_full_year)
             
             all_years_data = fetcher.fetch_trade_data(
                 self.region,
@@ -166,6 +168,7 @@ class TradeDataPreparer:
                 self.start_year,
                 self.end_year
             )
+            all_years_data = aggregate_by_year(all_years_data)
 
             target_year_data = [row for row in all_years_data if row["year"] == self.start_year]
             base_year_data = [row for row in all_years_data if row["year"] == self.end_year]

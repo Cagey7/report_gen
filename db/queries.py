@@ -65,7 +65,8 @@ SELECT
     tv.code AS tn_ved_code,
     tv.name AS tn_ved_name,
     tv.measure AS tn_ved_measure,
-    d.year
+    d.year,
+    d.month
 FROM data d
 JOIN countries c ON d.country_id = c.id
 JOIN regions r ON d.region_id = r.id
@@ -76,7 +77,7 @@ AND d.year BETWEEN %s AND %s
 AND d.month = ANY(%s)
 AND tv.digit = %s
 AND tv.code = ANY(%s)
-GROUP BY r.name, tv.code, tv.name, tv.measure, d.year;
+GROUP BY r.name, tv.code, tv.name, tv.measure, d.year, d.month;
 """
 
 FETCH_TRADE_DATA_CATEGORY = """
@@ -86,6 +87,7 @@ WITH grouped AS (
         %s                         AS country_name,
         r.name                     AS region_name,
         d.year,
+        d.month,
 
         SUM(d.export_tonn)   AS total_ex_tonn,
         SUM(d.export_units)  AS total_ex_ad_un,
@@ -106,7 +108,7 @@ WITH grouped AS (
       AND tv.digit  = %s
       AND tv.code   = ANY(%s)
 
-    GROUP BY LEFT(tv.code, %s), r.name, d.year
+    GROUP BY LEFT(tv.code, %s), r.name, d.year, d.month
 )
 
 SELECT
@@ -122,7 +124,8 @@ SELECT
     g.tn_ved_code,
     tv4.name    AS tn_ved_name,
     tv4.measure AS tn_ved_measure,
-    g.year
+    g.year,
+    g.month
 
 FROM grouped g
 JOIN tn_veds tv4

@@ -116,7 +116,7 @@ class TableDataPreparer:
                 growth_volume = format_percent(row["growth_units"])
             else:
                 growth_volume = format_percent(row["growth_tons"])
-            if growth_volume == "100%":
+            if growth_volume == "+100%":
                 growth_volume = "new"
             
             growth_value = format_percent(row["growth_value"])

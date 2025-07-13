@@ -86,7 +86,7 @@ class TradeDataFetcher:
             "export_tons", "export_units", "export_value",
             "import_tons", "import_units", "import_value",
             "country", "region", "tn_ved_code",
-            "tn_ved_name", "tn_ved_measure", "year"
+            "tn_ved_name", "tn_ved_measure", "year", "month"
         ]
         results = [dict(zip(columns, row)) for row in rows]
         return results
