@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 class TradeDataTransformer:
     def sort_by_key(self, data, key):
         filtered_data = [x for x in data if x.get(key) is not None]
@@ -41,6 +44,9 @@ class TradeDataTransformer:
 
         target_year_row = self.find_by_tn_ved_code(target_year_data, tn_ved_code)
         
+        if base_year_value == 0:
+            return None
+
         if target_year_row and target_year_row.get(f"{gen_type}_value"):
             target_year_value = target_year_row[f"{gen_type}_value"]
             target_year_tons = target_year_row[f"{gen_type}_tons"]
@@ -48,29 +54,31 @@ class TradeDataTransformer:
 
             target_year_share = self.calc_share(target_year_value, target_year_sum)
             growth_value = self.calc_growth(base_year_value, target_year_value)
-            growth_tons = (
-                self.calc_growth(base_year_tons, target_year_tons)
-                if base_year_tons is not None and target_year_tons is not None
-                else None
-            )
-            growth_units = (
-                self.calc_growth(base_year_units, target_year_units)
-                if base_year_units is not None and target_year_units is not None
-                else None
-            )
-
+            growth_tons = self.calc_growth(base_year_tons, target_year_tons)
+            growth_units = self.calc_growth(base_year_units, target_year_units)
         else:
+
             target_year_value = 0
             target_year_tons = 0
-            target_year_share = None
-            growth_value = None
-            growth_tons = None
-            target_year_units = None
-            growth_units = None
+            #new
+            target_year_share = 0
+            growth_value = 100
+            growth_tons = 100
+            target_year_units = 0
+            growth_units = 100
             
 
         base_year_share = self.calc_share(base_year_value, base_year_sum)
         abs_change = target_year_value - base_year_value
+
+        #new
+        # на 4 значном ТН ВЭДе нет единицы измерения, но на 6 и 10 есть ???
+        # нужно делать проверку и 10 значного ТН ВЭДа, потому что 
+        if measure == "тонна" and (base_year_units != 0 or target_year_units != 0):
+            target_year_units = 0
+            base_year_units = 0
+            growth_units = 0
+
         return {
             "tn_ved_name": tn_ved_name,
             "tn_ved_code": tn_ved_code,
@@ -110,6 +118,51 @@ class TradeDataTransformer:
         target_year_sum = self.sum_by_key(target_year_data, f"{gen_type}_value")
         for base_year_row in sorted_base_year_data:
             new_row = self.build_dict_data(gen_type, base_year_row, target_year_data, base_year_sum, target_year_sum)
-            data.append(new_row)
+            if new_row:
+                data.append(new_row)
 
         return data
+
+
+    def aggregate_by_year(self, data):
+        df = pd.DataFrame(data)
+        df["tn_ved_name"] = df["tn_ved_name"].fillna("")
+        df["tn_ved_measure"] = df["tn_ved_measure"].fillna("")
+
+        group_cols = ["country", "region", "tn_ved_code", "year"]
+
+        grouped = df.groupby(group_cols, as_index=False).agg({
+            "export_tons": "sum",
+            "export_units": "sum",
+            "export_value": "sum",
+            "import_tons": "sum",
+            "import_units": "sum",
+            "import_value": "sum",
+            "tn_ved_name": "first",
+            "tn_ved_measure": "first"
+        })
+
+        return grouped.to_dict("records")
+
+
+    def aggregate_by_month(self, data, target_year):
+        df = pd.DataFrame(data)
+        df = df[df["year"] == target_year]
+
+        numeric_fields = [
+            "export_tons", "export_units", "export_value",
+            "import_tons", "import_units", "import_value"
+        ]
+        for field in numeric_fields:
+            df[field] = pd.to_numeric(df[field], errors="coerce").fillna(0)
+
+        grouped = df.groupby("month", as_index=False).agg({
+            "export_tons": "sum",
+            "export_units": "sum",
+            "export_value": "sum",
+            "import_tons": "sum",
+            "import_units": "sum",
+            "import_value": "sum"
+        })
+
+        return grouped.to_dict("records")

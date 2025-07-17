@@ -39,6 +39,9 @@ class TradeDocumentGenerator:
         if self.prepared_data.get("trade_dynamics_table"):
             self.generate_trade_dynamics_table(doc, self.prepared_data["trade_dynamics_table"])
 
+        if self.prepared_data.get("months_table_data"):
+            self.generate_trade_dynamics_table(doc, self.prepared_data["months_table_data"], self.prepared_data["end_year"])
+
 
         if self.prepared_data["summary_table"][1][2] == "0,0":
             return "Данных нет", "Данных нет", "Данных нет"
@@ -502,7 +505,7 @@ class TradeDocumentGenerator:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
 
-    def generate_trade_dynamics_table(self, doc, table_data):
+    def generate_trade_dynamics_table(self, doc, table_data, year=None):
         if not table_data or len(table_data) < 2:
             return
 
@@ -513,7 +516,13 @@ class TradeDocumentGenerator:
         paragraph.paragraph_format.space_after = Pt(0)
         self.format_paragraph(paragraph, first_line_indent=False)
         
-        run = paragraph.add_run("Динамика товарооборота по годам")
+        if year:
+            title = f"Динамика товарооборота по месяцам за {year} год"
+            font_size = Pt(10)
+        else:
+            title = "Динамика товарооборота по годам"
+            font_size = Pt(12)
+        run = paragraph.add_run(title)
         run.italic = True
         self.set_run_style(run)
 
@@ -533,7 +542,7 @@ class TradeDocumentGenerator:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     run = paragraph.runs[0]
                     run.font.name = 'Times New Roman'
-                    run.font.size = Pt(12)
+                    run.font.size = font_size
                     if i == 0:
                         run.bold = True
                     elif i == 1:

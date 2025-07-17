@@ -215,3 +215,38 @@ class TableDataPreparer:
         ]
 
         return [header, turnover_row, export_row, import_row]
+
+
+    def build_month_table(self, data):
+        month_abbr_ru = [
+            "", "янв", "фев", "мар", "апр", "май", "июн",
+            "июл", "авг", "сен", "окт", "ноя", "дек"
+        ]
+
+        data = sorted(data, key=lambda x: x["month"])
+
+        max_val = max(
+            v for row in data for v in [row.get("export_value", 0), row.get("import_value", 0)] if v > 0
+        ) if data else 1
+
+        div, units = get_divider(max_val)
+
+        header = [f"{units} долл. США"] + [month_abbr_ru[row["month"]] for row in data]
+
+        export_row = ["Экспорт"]
+        import_row = ["Импорт"]
+        trade_row  = ["ТО"]
+
+        for row in data:
+            export_raw = row.get("export_value", 0)
+            import_raw = row.get("import_value", 0)
+
+            export_val = smart_round((export_raw / div) if div != 0 else 0)
+            import_val = smart_round((import_raw / div) if div != 0 else 0)
+            trade_val = smart_round((export_raw + import_raw) / div if div != 0 else 0)
+
+            export_row.append(export_val)
+            import_row.append(import_val)
+            trade_row.append(trade_val)
+
+        return [header, trade_row, export_row, import_row]

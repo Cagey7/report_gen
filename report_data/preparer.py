@@ -75,7 +75,7 @@ class TradeDataPreparer:
                             group_digit=self.digit,
                             use_category=True
                         )
-                    all_years_data_full_year = aggregate_by_year(all_years_data_full_year)
+                    all_years_data_full_year = transformer.aggregate_by_year(all_years_data_full_year)
 
             all_years_data = fetcher.fetch_trade_data(
                 self.region,
@@ -89,7 +89,8 @@ class TradeDataPreparer:
                 group_digit=self.digit,
                 use_category=True
             )
-            all_years_data = aggregate_by_year(all_years_data)
+            month_data = transformer.aggregate_by_month(all_years_data, self.end_year)
+            all_years_data = transformer.aggregate_by_year(all_years_data)
 
             target_year_data = [row for row in all_years_data if row["year"] == self.start_year]
             base_year_data = [row for row in all_years_data if row["year"] == self.end_year]
@@ -129,7 +130,7 @@ class TradeDataPreparer:
 
         else:
             tn_veds = fetcher.get_tn_ved_list(digit=self.digit)
-            # tn_veds = ["8606"]
+            # tn_veds = ["1001"]
             category_text = ""
 
             if self.long_report:
@@ -156,7 +157,7 @@ class TradeDataPreparer:
                         self.end_year - 6,
                         self.end_year - 1
                     )
-                all_years_data_full_year = aggregate_by_year(all_years_data_full_year)
+                all_years_data_full_year = transformer.aggregate_by_year(all_years_data_full_year)
             
             all_years_data = fetcher.fetch_trade_data(
                 self.region,
@@ -168,7 +169,8 @@ class TradeDataPreparer:
                 self.start_year,
                 self.end_year
             )
-            all_years_data = aggregate_by_year(all_years_data)
+            month_data = transformer.aggregate_by_month(all_years_data, self.end_year)
+            all_years_data = transformer.aggregate_by_year(all_years_data)
 
             target_year_data = [row for row in all_years_data if row["year"] == self.start_year]
             base_year_data = [row for row in all_years_data if row["year"] == self.end_year]
@@ -261,6 +263,7 @@ class TradeDataPreparer:
 
         if self.long_report:
             data_for_doc["trade_dynamics_table"] = tableDataPreparer.build_trade_dynamics_table(all_years_data_full_year, main_table_divider, main_table_measure)
+            data_for_doc["months_table_data"] = tableDataPreparer.build_month_table(month_data)
 
         if len(countries) > 1:
             country_table_units, country_table_data = tableDataPreparer.build_country_table_table(

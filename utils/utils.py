@@ -166,25 +166,3 @@ def get_year_period_str(start_year, end_year):
         else f"{start_year}-{end_year}"
     )
     return period
-
-
-def aggregate_by_year(data):
-    df = pd.DataFrame(data)
-
-    df["tn_ved_name"] = df["tn_ved_name"].fillna("")
-    df["tn_ved_measure"] = df["tn_ved_measure"].fillna("")
-
-    group_cols = ["country", "region", "tn_ved_code", "year"]
-
-    grouped = df.groupby(group_cols, as_index=False).agg({
-        "export_tons": "sum",
-        "export_units": "sum",
-        "export_value": "sum",
-        "import_tons": "sum",
-        "import_units": "sum",
-        "import_value": "sum",
-        "tn_ved_name": "first",
-        "tn_ved_measure": "first"
-    })
-
-    return grouped.to_dict("records")
