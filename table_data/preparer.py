@@ -94,34 +94,29 @@ class TableDataPreparer:
         for row in data:
             if row["tn_ved_code"] in exclude_tn_veds:
                 continue
+            
             name = f"{index}. {row['tn_ved_name']} (код {row['tn_ved_code']} ТНВЭД), {row['measure']}"
             index += 1
-            if row["target_year_units"]:
+            if row["target_year_units"] or row["base_year_units"]:
                 target_volume = smart_round(row["target_year_units"])
+                base_volume = smart_round(row["base_year_units"])
+                growth_volume = format_percent(row["growth_units"])
             else:
                 target_volume = smart_round(row["target_year_tons"])
-            
-            target_year_value = smart_round(row["target_year_value"]/div)
-            target_year_share = format_percent(row["target_year_share"], False)
-            
-            if row["base_year_units"]:
-                base_volume = smart_round(row["base_year_units"])
-            else:
                 base_volume = smart_round(row["base_year_tons"])
+                growth_volume = format_percent(row["growth_tons"])
             
             base_year_value = smart_round(row["base_year_value"]/div)
             base_year_share = format_percent(row["base_year_share"], False)
-            
-            if row["growth_units"]:
-                growth_volume = format_percent(row["growth_units"])
-            else:
-                growth_volume = format_percent(row["growth_tons"])
+            target_year_value = smart_round(row["target_year_value"]/div)
+            target_year_share = format_percent(row["target_year_share"], False)
+            growth_value = format_percent(row["growth_value"])
+
+            if growth_value == "+100%":
+                growth_value = "new"
             if growth_volume == "+100%":
                 growth_volume = "new"
-            
-            growth_value = format_percent(row["growth_value"])
-            if growth_value == "100%":
-                growth_value = "new"
+    
             row_data = [name, target_volume, target_year_value, target_year_share, base_volume, base_year_value, base_year_share, growth_volume, growth_value]
             table_data.append(row_data)
 

@@ -88,7 +88,7 @@ WITH grouped AS (
         r.name                     AS region_name,
         d.year,
         d.month,
-
+        MAX(tv.measure)            AS tn_ved_measure,
         SUM(d.export_tonn)   AS total_ex_tonn,
         SUM(d.export_units)  AS total_ex_ad_un,
         SUM(d.export_value)  AS total_ex_value,
@@ -123,7 +123,7 @@ SELECT
     g.region_name,
     g.tn_ved_code,
     tv4.name    AS tn_ved_name,
-    tv4.measure AS tn_ved_measure,
+    g.tn_ved_measure AS tn_ved_measure,
     g.year,
     g.month
 

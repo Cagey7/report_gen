@@ -57,23 +57,19 @@ class TradeDataTransformer:
             growth_tons = self.calc_growth(base_year_tons, target_year_tons)
             growth_units = self.calc_growth(base_year_units, target_year_units)
         else:
-
             target_year_value = 0
             target_year_tons = 0
-            #new
             target_year_share = 0
+            target_year_units = 0
+
             growth_value = 100
             growth_tons = 100
-            target_year_units = 0
             growth_units = 100
             
 
         base_year_share = self.calc_share(base_year_value, base_year_sum)
         abs_change = target_year_value - base_year_value
 
-        #new
-        # на 4 значном ТН ВЭДе нет единицы измерения, но на 6 и 10 есть ???
-        # нужно делать проверку и 10 значного ТН ВЭДа, потому что 
         if measure == "тонна" and (base_year_units != 0 or target_year_units != 0):
             target_year_units = 0
             base_year_units = 0
