@@ -60,7 +60,7 @@ SELECT
     SUM(d.import_tonn) AS total_im_tonn,
     SUM(d.import_units) AS total_im_ad_un,
     SUM(d.import_value) AS total_im_value,
-    %s AS country_name,
+    c.name_ru AS country_name,
     r.name AS region_name,
     tv.code AS tn_ved_code,
     tv.name AS tn_ved_name,
@@ -77,38 +77,35 @@ AND d.year BETWEEN %s AND %s
 AND d.month = ANY(%s)
 AND tv.digit = %s
 AND tv.code = ANY(%s)
-GROUP BY r.name, tv.code, tv.name, tv.measure, d.year, d.month;
+GROUP BY c.name_ru, r.name, tv.code, tv.name, tv.measure, d.year, d.month;
 """
 
 FETCH_TRADE_DATA_CATEGORY = """
 WITH grouped AS (
     SELECT
-        LEFT(tv.code, %s)           AS tn_ved_code,
-        %s                         AS country_name,
-        r.name                     AS region_name,
+        LEFT(tv.code, %s) AS tn_ved_code,
+        c.name_ru AS country_name,
+        r.name AS region_name,
         d.year,
         d.month,
-        MAX(tv.measure)            AS tn_ved_measure,
-        SUM(d.export_tonn)   AS total_ex_tonn,
-        SUM(d.export_units)  AS total_ex_ad_un,
-        SUM(d.export_value)  AS total_ex_value,
-        SUM(d.import_tonn)   AS total_im_tonn,
-        SUM(d.import_units)  AS total_im_ad_un,
-        SUM(d.import_value)  AS total_im_value
-
+        MAX(tv.measure) AS tn_ved_measure,
+        SUM(d.export_tonn) AS total_ex_tonn,
+        SUM(d.export_units) AS total_ex_ad_un,
+        SUM(d.export_value) AS total_ex_value,
+        SUM(d.import_tonn) AS total_im_tonn,
+        SUM(d.import_units) AS total_im_ad_un,
+        SUM(d.import_value) AS total_im_value
     FROM data d
-    JOIN countries  c ON d.country_id = c.id
-    JOIN regions    r ON d.region_id  = r.id
-    JOIN tn_veds    tv ON d.tn_ved_id = tv.id
-
+    JOIN countries c ON d.country_id = c.id
+    JOIN regions r ON d.region_id = r.id
+    JOIN tn_veds tv ON d.tn_ved_id = tv.id
     WHERE c.name_ru = ANY(%s)
-      AND r.name    = %s
+      AND r.name = %s
       AND d.year BETWEEN %s AND %s
-      AND d.month   = ANY(%s)
-      AND tv.digit  = %s
-      AND tv.code   = ANY(%s)
-
-    GROUP BY LEFT(tv.code, %s), r.name, d.year, d.month
+      AND d.month = ANY(%s)
+      AND tv.digit = %s
+      AND tv.code = ANY(%s)
+    GROUP BY c.name_ru, LEFT(tv.code, %s), r.name, d.year, d.month
 )
 
 SELECT
@@ -118,41 +115,15 @@ SELECT
     g.total_im_tonn,
     g.total_im_ad_un,
     g.total_im_value,
-
     g.country_name,
     g.region_name,
     g.tn_ved_code,
-    tv4.name    AS tn_ved_name,
+    tv4.name AS tn_ved_name,
     g.tn_ved_measure AS tn_ved_measure,
     g.year,
     g.month
-
 FROM grouped g
 JOIN tn_veds tv4
-  ON tv4.code  = g.tn_ved_code
+  ON tv4.code = g.tn_ved_code
  AND tv4.digit = %s;
-"""
-
-
-FETCH_COUNTRY_TRADE_DATA = """
-SELECT 
-    c.name_ru AS country_name,
-    SUM(d.export_tonn) AS total_ex_tonn,
-    SUM(d.export_units) AS total_ex_ad_un,
-    SUM(d.export_value) AS total_ex_value,
-    SUM(d.import_tonn) AS total_im_tonn,
-    SUM(d.import_units) AS total_im_ad_un,
-    SUM(d.import_value) AS total_im_value
-FROM data d
-JOIN countries c ON d.country_id = c.id
-JOIN regions r ON d.region_id = r.id
-JOIN tn_veds tv ON d.tn_ved_id = tv.id
-    WHERE c.name_ru = ANY(%s)
-    AND r.name = %s
-    AND d.year = %s
-    AND d.month = ANY(%s)
-    AND tv.digit = %s
-    AND tv.code = ANY(%s)
-GROUP BY c.name_ru, d.year
-ORDER BY total_im_value DESC;
 """

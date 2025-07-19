@@ -8,8 +8,7 @@ from db.queries import (
     GET_TN_VEDS_BY_CATEGORY,
     GET_TN_VEDS_BY_DIGIT,
     FETCH_TRADE_DATA,
-    FETCH_TRADE_DATA_CATEGORY,
-    FETCH_COUNTRY_TRADE_DATA
+    FETCH_TRADE_DATA_CATEGORY
 )
 
 class TradeDataFetcher:
@@ -62,21 +61,21 @@ class TradeDataFetcher:
         return [row[0] for row in rows]
 
 
-    def fetch_trade_data(self, region, country, country_list, months, digit, tn_veds, year_start, year_end=None, group_digit=None, use_category=False):
+    def fetch_trade_data(self, region, country_list, months, digit, tn_veds, year_start, year_end=None, group_digit=None, use_category=False):
         if year_end is None:
             year_end = year_start
 
         if use_category:
             query = FETCH_TRADE_DATA_CATEGORY
             params = (
-                group_digit, country, country_list, region,
+                group_digit, country_list, region,
                 year_start, year_end, months, digit, tn_veds,
                 group_digit, group_digit
             )
         else:
             query = FETCH_TRADE_DATA
             params = (
-                country, country_list, region,
+                country_list, region,
                 year_start, year_end, months, digit, tn_veds
             )
 
@@ -87,17 +86,6 @@ class TradeDataFetcher:
             "import_tons", "import_units", "import_value",
             "country", "region", "tn_ved_code",
             "tn_ved_name", "tn_ved_measure", "year", "month"
-        ]
-        results = [dict(zip(columns, row)) for row in rows]
-        return results
-
-
-    def fetch_country_trade_data(self, region, country_list, year, months, digit, tn_veds):
-        params = (country_list, region, year, months, digit, tn_veds)
-        rows = self.execute_query(FETCH_COUNTRY_TRADE_DATA, params)
-        columns = [
-            "country", "export_tons", "export_units", "export_value",
-            "import_tons", "import_units", "import_value"
         ]
         results = [dict(zip(columns, row)) for row in rows]
         return results
@@ -116,4 +104,3 @@ class TradeDataFetcher:
             if input_month > last_db_month:
                 return False
             return True
-

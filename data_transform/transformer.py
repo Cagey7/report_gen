@@ -120,12 +120,15 @@ class TradeDataTransformer:
         return data
 
 
-    def aggregate_by_year(self, data):
+    def aggregate_by_year(self, data, merge_countries=True):
         df = pd.DataFrame(data)
         df["tn_ved_name"] = df["tn_ved_name"].fillna("")
         df["tn_ved_measure"] = df["tn_ved_measure"].fillna("")
 
-        group_cols = ["country", "region", "tn_ved_code", "year"]
+        if merge_countries:
+            group_cols = ["region", "tn_ved_code", "year"]
+        else:
+            group_cols = ["country", "region", "tn_ved_code", "year"]
 
         grouped = df.groupby(group_cols, as_index=False).agg({
             "export_tons": "sum",
@@ -162,3 +165,14 @@ class TradeDataTransformer:
         })
 
         return grouped.to_dict("records")
+
+
+    def aggregate_trade_data_by_country(self, data):
+        df = pd.DataFrame(data)
+
+        df_agg = df.groupby("country", as_index=False)[
+            ["export_tons", "export_units", "export_value",
+            "import_tons", "import_units", "import_value"]
+        ].sum()
+
+        return df_agg.to_dict(orient="records")
