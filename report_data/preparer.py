@@ -34,6 +34,11 @@ class TradeDataPreparer:
         countries = fetcher.get_country_list(self.country_or_group)
         months = self.month_range or fetcher.get_max_month_list(self.region, countries, self.end_year)
 
+        if self.long_report:
+            report_start_year = self.start_year - 7
+        else:
+            report_start_year = self.start_year
+
         if self.category:
             category_text = f", {self.category}"
             tn_veds_category = fetcher.get_tn_ved_list(category=self.category)
@@ -42,14 +47,14 @@ class TradeDataPreparer:
             tn_veds = list(set(code[:tn_len] for code in tn_veds_category))
             trade_data = fetcher.fetch_trade_data(
                 self.region, countries, months, category_digit, tn_veds_category,
-                self.start_year, self.end_year, group_digit=self.digit, use_category=True
+                report_start_year, self.end_year, group_digit=self.digit, use_category=True
             )
         else:
             category_text = ""
             tn_veds = fetcher.get_tn_ved_list(digit=self.digit)
             trade_data = fetcher.fetch_trade_data(
                 self.region, countries, months, self.digit, tn_veds,
-                self.start_year, self.end_year
+                report_start_year, self.end_year
             )
 
         trade_months_data_aggr = transformer.aggregate_by_month(trade_data, self.end_year)
@@ -140,7 +145,7 @@ class TradeDataPreparer:
         )
 
         if self.long_report:
-            data_for_doc["trade_dynamics_table"] = tableDataPreparer.build_trade_dynamics_table(trade_data, main_table_divider, main_table_measure)
+            data_for_doc["trade_dynamics_table"] = tableDataPreparer.build_trade_dynamics_table(trade_data, main_table_divider, main_table_measure, months)
             data_for_doc["months_table_data"] = tableDataPreparer.build_month_table(trade_months_data_aggr)
 
         if len(countries) > 1:

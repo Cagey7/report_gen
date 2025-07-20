@@ -519,6 +519,8 @@ class TradeDocumentGenerator:
         if year:
             title = f"Динамика товарооборота по месяцам за {year} год"
             font_size = Pt(10)
+            if len(table_data[0]) < 8:
+                font_size = Pt(12)
         else:
             title = "Динамика товарооборота по годам"
             font_size = Pt(12)

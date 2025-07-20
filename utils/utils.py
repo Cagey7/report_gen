@@ -1,26 +1,27 @@
 import math
 import pandas as pd
 
-def format_month_range(months):
-    if sorted(months) == list(range(1, 13)):
+def format_month_range(months, short=False):
+    if not months:
         return ""
-
-    month_names = [
+    months = sorted(set(months))
+    month_short_names = [
+        "янв", "фев", "мар", "апр", "май", "июн",
+        "июл", "авг", "сен", "окт", "ноя", "дек"
+    ]
+    month_full_names = [
         "январь", "февраль", "март", "апрель", "май", "июнь",
         "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"
     ]
-
-    if not months:
+    names = month_short_names if short else month_full_names
+    if months == list(range(1, 13)):
         return ""
-
-    months = sorted(set(months))
-    start = month_names[months[0] - 1]
-    end = month_names[months[-1] - 1]
-
+    start = names[months[0] - 1]
+    end = names[months[-1] - 1]
     if start == end:
         return f"{start} "
     else:
-        return f"{start}–{end} "
+        return f"{start}-{end} "
 
 
 def smart_round(num):

@@ -187,7 +187,7 @@ class TableDataPreparer:
         return units, final_table_data
 
 
-    def build_trade_dynamics_table(self, data, div, units):
+    def build_trade_dynamics_table(self, data, div, units, months):
         summary = {}
         for row in data:
             year = row["year"]
@@ -198,7 +198,14 @@ class TableDataPreparer:
 
         years = sorted(summary.keys())
 
-        header = [f"{units} долл. США"] + years
+        def format_year_label(y):
+            if months[-1] == 12:
+                return f"{y}"
+            else:
+                return f"{format_month_range(months, short=True)}\n{y}"
+
+        header = [f"{units} долл. США"] + [format_year_label(y) for y in years]
+
         turnover_row = ["Товарооборот"] + [
             smart_round((summary[y]["export"] + summary[y]["import"]) / div) for y in years
         ]
