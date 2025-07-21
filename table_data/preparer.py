@@ -1,4 +1,6 @@
+from data.short_regions import short_regions
 from utils.utils import *
+
 
 class TableDataPreparer:
     def build_main_table(self, start_year, end_year, months, export_sum, import_sum, total_sum, div, units):
@@ -127,7 +129,7 @@ class TableDataPreparer:
         return table_data
     
     
-    def build_country_table_table(self, data, table_size):
+    def build_country_data_table(self, data, table_size):
         table_data = []
 
         for row in data:
@@ -182,6 +184,58 @@ class TableDataPreparer:
                     f"{import_p}%"
                 ]
 
+            final_table_data.append(new_row)
+
+        return units, final_table_data
+
+    def build_region_data_table(self, data):
+        table_data = []
+        for row in data:
+            import_value = row.get("import_value", 0) or 0
+            export_value = row.get("export_value", 0) or 0
+            total = import_value + export_value
+            region = row.get("region", "")
+            region = short_regions.get(region, region)
+            table_data.append([region, total, export_value, import_value])
+
+        sorted_data = sorted(table_data, key=lambda x: x[1], reverse=True)
+
+        total_total = sum(row[1] or 0 for row in sorted_data)
+        total_export = sum(row[2] or 0 for row in sorted_data)
+        total_import = sum(row[3] or 0 for row in sorted_data)
+
+        div, units = get_divider(total_total / 1000)
+
+        final_table_data = []
+        for i, row in enumerate(sorted_data, 1):
+            if i == 1:
+                new_row = [
+                    "",
+                    row[0],
+                    smart_round((row[1] or 0) / div if div != 0 else 0),
+                    smart_round((row[2] or 0) / div if div != 0 else 0),
+                    smart_round((row[3] or 0) / div if div != 0 else 0),
+                    "100%",
+                    "100%",
+                    "100%"
+                ]
+                final_table_data.append(new_row)
+                continue
+
+            total_p = round_percent((row[1] or 0) / (total_total - sorted_data[0][1]) * 100) if (total_total - sorted_data[0][1]) != 0 else 0
+            export_p = round_percent((row[2] or 0) / (total_export - sorted_data[0][2]) * 100) if (total_export - sorted_data[0][2]) != 0 else 0
+            import_p = round_percent((row[3] or 0) / (total_import - sorted_data[0][3]) * 100) if (total_import - sorted_data[0][3]) != 0 else 0
+
+            new_row = [
+                i - 1,
+                row[0],
+                smart_round((row[1] or 0) / div if div != 0 else 0),
+                smart_round((row[2] or 0) / div if div != 0 else 0),
+                smart_round((row[3] or 0) / div if div != 0 else 0),
+                f"{total_p}%",
+                f"{export_p}%",
+                f"{import_p}%"
+            ]
             final_table_data.append(new_row)
 
         return units, final_table_data

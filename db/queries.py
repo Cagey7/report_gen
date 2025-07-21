@@ -72,7 +72,7 @@ JOIN countries c ON d.country_id = c.id
 JOIN regions r ON d.region_id = r.id
 JOIN tn_veds tv ON d.tn_ved_id = tv.id
 WHERE c.name_ru = ANY(%s)
-AND r.name = %s
+AND r.name = ANY(%s)
 AND d.year BETWEEN %s AND %s
 AND d.month = ANY(%s)
 AND tv.digit = %s
@@ -100,7 +100,7 @@ WITH grouped AS (
     JOIN regions r ON d.region_id = r.id
     JOIN tn_veds tv ON d.tn_ved_id = tv.id
     WHERE c.name_ru = ANY(%s)
-      AND r.name = %s
+      AND r.name = ANY(%s)
       AND d.year BETWEEN %s AND %s
       AND d.month = ANY(%s)
       AND tv.digit = %s

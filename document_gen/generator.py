@@ -35,24 +35,33 @@ class TradeDocumentGenerator:
         self.add_document_header(*args)
         self.add_summary_paragraph(doc, self.prepared_data["summary_text"])
         self.add_summary_table(doc, self.prepared_data["summary_header"], self.prepared_data["summary_table"])
-        
+
         if self.prepared_data.get("trade_dynamics_table"):
             self.generate_trade_dynamics_table(doc, self.prepared_data["trade_dynamics_table"])
 
         if self.prepared_data.get("months_table_data"):
             self.generate_trade_dynamics_table(doc, self.prepared_data["months_table_data"], self.prepared_data["end_year"])
 
-
-        if self.prepared_data["summary_table"][1][2] == "0,0":
-            return "Данных нет", "Данных нет", "Данных нет"
-        
         if self.prepared_data.get("country_table_data"):
             self.add_country_table(
                 doc,
                 self.prepared_data["country_table_data"],
                 self.prepared_data["country_table_header"],
                 self.prepared_data["country_table_units"],
+                "country"
             )
+
+        if self.prepared_data.get("region_table_data"):
+            self.add_country_table(
+                doc,
+                self.prepared_data["region_table_data"],
+                self.prepared_data["region_table_header"],
+                self.prepared_data["region_table_units"],
+                "region"
+            ) 
+
+        if self.prepared_data["summary_table"][1][2] == "0,0":
+            return "Данных нет", "Данных нет", "Данных нет"
         
         self.add_import_analysis_text(doc, self.prepared_data["export_text"])
         self.add_import_analysis_text(doc, self.prepared_data["import_text"])
@@ -418,7 +427,7 @@ class TradeDocumentGenerator:
                             run.font.color.rgb = RGBColor(255, 0, 0)  # красный
 
 
-    def add_country_table(self, doc, data, header, units):
+    def add_country_table(self, doc, data, header, units, table_type):
         # ======= Заголовок таблицы =======
         paragraph = doc.add_paragraph()
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -437,7 +446,10 @@ class TradeDocumentGenerator:
         # ======= Первая строка заголовка =======
         header_row_1 = table.rows[0].cells
         header_row_1[0].text = '№'
-        header_row_1[1].text = 'Страны'
+        if table_type == "region":
+            header_row_1[1].text = 'Регионы'
+        elif table_type == "country":
+            header_row_1[1].text = 'Страны'
         header_row_1[2].text = f'Стоимость, {units}'
         header_row_1[5].text = 'Доля'
 
@@ -476,6 +488,8 @@ class TradeDocumentGenerator:
                     run.font.bold = True
                     run.font.name = 'Times New Roman'
                     run.font.size = Pt(12)  # шрифт заголовков
+                    paragraph.paragraph_format.space_before = Pt(2)
+                    paragraph.paragraph_format.space_after = Pt(2)
 
         # ======= Ширина столбцов =======
         for row in table.rows:
@@ -495,6 +509,8 @@ class TradeDocumentGenerator:
                     run.font.size = Pt(12)  # шрифт данных
                     if row_idx == 2:
                         run.bold = True
+                    paragraph.paragraph_format.space_before = Pt(2)
+                    paragraph.paragraph_format.space_after = Pt(2)
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
 
         # ======= Центрируем текст во всех ячейках =======
@@ -503,6 +519,8 @@ class TradeDocumentGenerator:
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
                 for paragraph in cell.paragraphs:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    paragraph.paragraph_format.space_before = Pt(2)
+                    paragraph.paragraph_format.space_after = Pt(2)
 
 
     def generate_trade_dynamics_table(self, doc, table_data, year=None):

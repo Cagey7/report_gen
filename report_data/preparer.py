@@ -32,6 +32,7 @@ class TradeDataPreparer:
         tableDataPreparer = TableDataPreparer()
         textDataPreparer = TextDataPreparer()
         countries = fetcher.get_country_list(self.country_or_group)
+        region_list = [self.region]
         months = self.month_range or fetcher.get_max_month_list(self.region, countries, self.end_year)
 
         if self.long_report:
@@ -46,16 +47,49 @@ class TradeDataPreparer:
             tn_len = self.digit if self.digit in (4, 6) else category_digit
             tn_veds = list(set(code[:tn_len] for code in tn_veds_category))
             trade_data = fetcher.fetch_trade_data(
-                self.region, countries, months, category_digit, tn_veds_category,
+                region_list, countries, months, category_digit, tn_veds_category,
                 report_start_year, self.end_year, group_digit=self.digit, use_category=True
             )
         else:
             category_text = ""
             tn_veds = fetcher.get_tn_ved_list(digit=self.digit)
             trade_data = fetcher.fetch_trade_data(
-                self.region, countries, months, self.digit, tn_veds,
+                region_list, countries, months, self.digit, tn_veds,
                 report_start_year, self.end_year
             )
+
+        if self.long_report and self.region == "Республика Казахстан":
+            region_list = [
+                "Республика Казахстан",
+                "Астана",
+                "Алматы",
+                "Шымкент",
+                "область Абай",
+                "Акмолинская область",
+                "Актюбинская область",
+                "Алматинская область",
+                "Атырауская область",
+                "Восточно-Казахстанская область",
+                "Жамбылская область",
+                "область Жетісу",
+                "Западно-Казахстанская область",
+                "Карагандинская область",
+                "Костанайская область",
+                "Кызылординская область",
+                "Мангистауская область",
+                "Павлодарская область",
+                "Северо-Казахстанская область",
+                "Туркестанская область",
+                "область Ұлытау"
+            ]
+            trade_data_region = fetcher.fetch_trade_data(
+                region_list, countries, months, self.digit, tn_veds,
+                report_start_year, self.end_year
+            )
+            trade_region_data_aggr = transformer.aggregate_by_year(trade_data_region, group_by_region=True)
+            region_base_year_data = [row for row in trade_region_data_aggr if row["year"] == self.end_year]
+            trade_region_data = transformer.aggregate_trade_data(region_base_year_data, by="region")
+
 
         trade_months_data_aggr = transformer.aggregate_by_month(trade_data, self.end_year)
         trade_year_data_aggr = transformer.aggregate_by_year(trade_data)
@@ -64,9 +98,8 @@ class TradeDataPreparer:
         target_year_data = [row for row in trade_year_data_aggr if row["year"] == self.start_year]
         base_year_data = [row for row in trade_year_data_aggr if row["year"] == self.end_year]
         country_base_year_data = [row for row in trade_country_data_aggr if row["year"] == self.end_year]
-
-        trade_country_data = transformer.aggregate_trade_data_by_country(country_base_year_data)
-
+        trade_country_data = transformer.aggregate_trade_data(country_base_year_data, by="country")
+        
         table_data_import = transformer.get_table_data("import", base_year_data, target_year_data)
         table_data_export = transformer.get_table_data("export", base_year_data, target_year_data)
         table_data_import_reverse = transformer.get_table_data("import", target_year_data, base_year_data)
@@ -147,16 +180,19 @@ class TradeDataPreparer:
         if self.long_report:
             data_for_doc["trade_dynamics_table"] = tableDataPreparer.build_trade_dynamics_table(trade_data, main_table_divider, main_table_measure, months)
             data_for_doc["months_table_data"] = tableDataPreparer.build_month_table(trade_months_data_aggr)
+            
+            if self.region == "Республика Казахстан":
+                region_table_units, region_table_data = tableDataPreparer.build_region_data_table(trade_region_data)
+                data_for_doc["region_table_units"] = region_table_units
+                data_for_doc["region_table_data"] = region_table_data
+                data_for_doc["region_table_header"] = f"Показатели внешней торговли в разрезе регионов за {self.end_year} год"
 
         if len(countries) > 1:
-            country_table_units, country_table_data = tableDataPreparer.build_country_table_table(
-                trade_country_data,
-                self.country_table_size
-            )
+            country_table_units, country_table_data = tableDataPreparer.build_country_data_table(trade_country_data, self.country_table_size)
             
             data_for_doc["country_table_units"] = country_table_units
             data_for_doc["country_table_data"] = country_table_data
-            data_for_doc["country_table_header"] = "Показатели внешней торговли в разрезе стран"
+            data_for_doc["country_table_header"] = f"Показатели внешней торговли в разрезе стран за {self.end_year} год"
 
                     
         import_table_div, import_table_measure = get_export_import_table_divider(
@@ -237,6 +273,7 @@ class TradeDataPreparer:
         data_for_doc["end_year"] = self.end_year
         data_for_doc["export_table_measure"] = export_table_measure
         data_for_doc["import_table_measure"] = import_table_measure
+        plus_sign = "+" if self.long_report else ""
         data_for_doc["filename"] = (
             f'Справка по торговле '
             f'{region_cases[self.region]["родительный"]} '
@@ -245,6 +282,7 @@ class TradeDataPreparer:
             f'{"год" if months[-1] == 12 else "года"})'
             f'{category_text}'
             f'{", " + str(self.digit) + "-знак(ов)" if self.digit != 4 else ""}'
+            f'{plus_sign}'
             f'.docx'
         )
         
@@ -254,6 +292,7 @@ class TradeDataPreparer:
             f'({get_short_period(format_month_range(months))}{period} )'
             f'{" " + str(self.digit) + " зн. " if self.digit != 4 else ""}'
             f'{category_text[2:]}'
+            f'{plus_sign}'
             f'.docx'
         )
         return data_for_doc
