@@ -60,7 +60,7 @@ class TextDataPreparer:
                 return f"{subject} за {month_str}{year_str} составил {base_year_sum} {units} долл. США."
 
 
-    def gen_decline_growth_row(self, data, trend):
+    def gen_decline_growth_row(self, data, trend, points=False):
         if data["abs_change"] < 0:
             name = data["tn_ved_name"].lower()
             curr_value = data["target_year_value"]
@@ -84,7 +84,10 @@ class TextDataPreparer:
                 drop_percent_formatted = format_percent(drop_percent, False)
                 if "-" in drop_percent_formatted:
                     drop_percent_formatted = "100%"
-                return f"{name} - {'на ' if not drop_percent_formatted.lower().startswith('рост') else ''}{drop_percent_formatted} или на {smart_round(drop_value)} {units} долл. США (с {smart_round(prev_value)} до {smart_round(curr_value)} {units} долл. США)"
+                if points:
+                    return f"• {name} - {'на ' if not drop_percent_formatted.lower().startswith('рост') else ''}{drop_percent_formatted} (с {smart_round(prev_value)} до {smart_round(curr_value)} {units} долл. США)"
+                else:
+                    return f"{name} - {'на ' if not drop_percent_formatted.lower().startswith('рост') else ''}{drop_percent_formatted} или на {smart_round(drop_value)} {units} долл. США (с {smart_round(prev_value)} до {smart_round(curr_value)} {units} долл. США)"
             elif trend == "growth":
                 growth_value = data["growth_value"]
                 prev_value, units = num_converter(prev_value)
@@ -101,7 +104,10 @@ class TextDataPreparer:
                 growth_value_formatted = format_percent(growth_value, False)
                 if "-" in growth_value_formatted:
                     growth_value_formatted = "100%"
-                return f"{name} - {'на ' if not growth_value_formatted.lower().startswith('рост') else ''}{growth_value_formatted} или на {smart_round(drop_value)} {units} долл. США (с {smart_round(curr_value)} до {smart_round(prev_value)} {units} долл. США)"
+                if points:
+                    return f"• {name} - {'на ' if not growth_value_formatted.lower().startswith('рост') else ''}{growth_value_formatted} (с {smart_round(curr_value)} до {smart_round(prev_value)} {units} долл. США)"
+                else:
+                    return f"{name} - {'на ' if not growth_value_formatted.lower().startswith('рост') else ''}{growth_value_formatted} или на {smart_round(drop_value)} {units} долл. США (с {smart_round(curr_value)} до {smart_round(prev_value)} {units} долл. США)"
 
 
     def gen_summary_row(self, data):
@@ -253,7 +259,7 @@ class TextDataPreparer:
             return import_text
 
 
-    def gen_decline_growth_text(self, trand, data, text_size, exclude_tn_veds):
+    def gen_decline_growth_text(self, trand, data, text_size, exclude_tn_veds, points=False):
         sorted_data = sorted(data, key=lambda x: x["abs_change"], reverse=False)
         text_block = []
         count = 0
@@ -261,7 +267,7 @@ class TextDataPreparer:
         for row in sorted_data:
             if row["tn_ved_code"] in exclude_tn_veds:
                 continue
-            result = self.gen_decline_growth_row(row, trand)
+            result = self.gen_decline_growth_row(row, trand, points)
             if result is not None:
                 text_block.append(result)
                 count += 1
@@ -287,3 +293,55 @@ class TextDataPreparer:
                 break
 
         return row_main_text
+
+
+    def gen_text_flow_points(self, direction, start_year, end_year, months, data, data_reverse, sum_data, region, country_or_group, exclude_tn_veds, text_size, div, units, points=False):
+        period = get_year_period_str(start_year, end_year)
+        if direction == "export":
+            export_text = {}
+
+            summary_text = self.gen_summary_text(direction, country_or_group, region, start_year, end_year, months, sum_data, div, units)
+            export_text["summary"] = summary_text
+            if summary_text == "":
+                export_text["summary"] = f"Экспорт в {period} году в {region_cases[region]['винительный']} за отчетный период отсутствовал."
+                return export_text
+
+            rows_decline_text = self.gen_decline_growth_text("decline", data_reverse, text_size, exclude_tn_veds, points)
+
+            row_growth_text = self.gen_decline_growth_text("growth", data, text_size, exclude_tn_veds, points)
+
+            if sum_data["base_year_sum"] > sum_data["target_year_sum"]:
+                export_text["growth_header"] = "Рост экспорта обосновывается увеличением поставок таких товаров, как: "
+                export_text["decline_header"] = "Вместе с тем наблюдается снижение экспортных поставок таких товаров, как: "
+            else:
+                export_text["decline_header"] = f"Сокращение экспорта из {region_cases[region]['родительный']} обосновывается снижением поставок таких товаров, как: "
+                export_text["growth_header"] = "Вместе с тем наблюдается рост поставок таких товаров, как: "
+            
+            export_text["decline"] = rows_decline_text
+            export_text["growth"] = row_growth_text
+
+            return export_text
+        
+        if direction == "import":
+            import_text = {}
+            summary_text = self.gen_summary_text(direction, country_or_group, region, start_year, end_year, months, sum_data, div, units)
+            import_text["summary"] = summary_text
+            if summary_text == "":
+                import_text["summary"] = f"Импорт в {period} году из {region_cases[region]['винительный']} за отчетный период отсутствовал."
+                return import_text
+
+            rows_decline_text = self.gen_decline_growth_text("decline", data_reverse, text_size, exclude_tn_veds, points)
+            row_growth_text = self.gen_decline_growth_text("growth", data, text_size, exclude_tn_veds, points)
+
+            if sum_data["base_year_sum"] > sum_data["target_year_sum"]:
+                import_text["growth_header"] = "Рост импорта обосновывается увеличением ввоза таких товаров, как: "
+                import_text["decline_header"] = "Вместе с тем наблюдается снижение импортных поставок таких товаров, как: "
+            else:
+                import_text["decline_header"] = f"Сокращение импорта в {region_cases[region]['винительный']} обосновывается снижением поставок таких товаров, как: "
+                import_text["growth_header"] = "Вместе с тем наблюдается рост поставок таких товаров, как: "
+
+            import_text["decline"] = rows_decline_text
+            import_text["growth"] = row_growth_text
+
+            return import_text
+

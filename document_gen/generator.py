@@ -14,33 +14,41 @@ from utils.utils import format_month_range
 from db.fetcher import TradeDataFetcher
 from report_data.preparer import TradeDataPreparer
 
+
+HEADER_BG = "1F4E79"  # темно-синий
+HEADER_TEXT = RGBColor(255, 255, 255)  # белый
+HEADER_BASIC = "D9D9D9"  # светло-серый
+ROW_BG1 = "DCE6F1"    # светло-синий
+ROW_BG2 = "FFFFFF"    # белый
+
+
 class TradeDocumentGenerator:
     def __init__(self, prepared_data):
         self.prepared_data = prepared_data
 
     def generate(self):
         doc = Document()
-        # Установка отступов страницы (в дюймах)
         section = doc.sections[0]
         section.top_margin = Inches(2 / 2.54)
         section.bottom_margin = Inches(2 / 2.54)
         section.left_margin = Inches(3 / 2.54)
         section.right_margin = Inches(1.5 / 2.54)
 
-        args = [doc, self.prepared_data["document_header"]]
+        modern_style = False
 
+        args = [doc, self.prepared_data["document_header"]]
         if "category_description" in self.prepared_data:
             args.append(self.prepared_data["category_description"])
 
         self.add_document_header(*args)
         self.add_summary_paragraph(doc, self.prepared_data["summary_text"])
-        self.add_summary_table(doc, self.prepared_data["summary_header"], self.prepared_data["summary_table"])
+        self.add_summary_table(doc, self.prepared_data["summary_header"], self.prepared_data["summary_table"], modern_style)
 
         if self.prepared_data.get("trade_dynamics_table"):
-            self.generate_trade_dynamics_table(doc, self.prepared_data["trade_dynamics_table"])
+            self.generate_trade_dynamics_table(doc, self.prepared_data["trade_dynamics_table"], modern_style)
 
         if self.prepared_data.get("months_table_data"):
-            self.generate_trade_dynamics_table(doc, self.prepared_data["months_table_data"], self.prepared_data["end_year"])
+            self.generate_trade_dynamics_table(doc, self.prepared_data["months_table_data"], modern_style, self.prepared_data["end_year"])
 
         if self.prepared_data.get("country_table_data"):
             self.add_country_table(
@@ -48,7 +56,8 @@ class TradeDocumentGenerator:
                 self.prepared_data["country_table_data"],
                 self.prepared_data["country_table_header"],
                 self.prepared_data["country_table_units"],
-                "country"
+                "country",
+                modern_style
             )
 
         if self.prepared_data.get("region_table_data"):
@@ -57,7 +66,8 @@ class TradeDocumentGenerator:
                 self.prepared_data["region_table_data"],
                 self.prepared_data["region_table_header"],
                 self.prepared_data["region_table_units"],
-                "region"
+                "region",
+                modern_style
             ) 
 
         if self.prepared_data["summary_table"][1][2] == "0,0":
@@ -73,7 +83,8 @@ class TradeDocumentGenerator:
             self.prepared_data["months"],
             self.prepared_data["start_year"],
             self.prepared_data["end_year"],
-            self.prepared_data["export_table_measure"]
+            self.prepared_data["export_table_measure"],
+            modern_style
         )
         self.generate_export_import_table(
             doc,
@@ -82,24 +93,22 @@ class TradeDocumentGenerator:
             self.prepared_data["months"],
             self.prepared_data["start_year"],
             self.prepared_data["end_year"],
-            self.prepared_data["import_table_measure"]
+            self.prepared_data["import_table_measure"],
+            modern_style
         )
 
         return doc, self.prepared_data["filename"], self.prepared_data["short_filename"]
 
-    # Установка стиля текста
     def set_run_style(self, run):
         run.font.name = 'Times New Roman'
         run._element.rPr.rFonts.set(qn('w:eastAsia'), 'Times New Roman')
         run.font.size = Pt(14)
 
-    # Форматирование абзаца
     def format_paragraph(self, paragraph, first_line_indent=True):
         if first_line_indent:
             paragraph.paragraph_format.first_line_indent = Inches(0.5)
         paragraph.paragraph_format.line_spacing = 1
 
-    # Заголовок документа
     def add_document_header(self, doc, header_text, category_description=None):
         paragraph = doc.add_paragraph()
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -119,13 +128,11 @@ class TradeDocumentGenerator:
             run2.italic = True
             self.set_run_style(run2)
 
-    # Обычный параграф
     def add_summary_paragraph(self, doc, text):
         paragraph = doc.add_paragraph()
         paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         self.format_paragraph(paragraph)
 
-        # Первое слово — жирным
         words = text.split(' ', 1)
         if not words:
             return
@@ -134,14 +141,13 @@ class TradeDocumentGenerator:
         self.set_run_style(run_first)
         run_first.bold = True
 
-        # Остальной текст
         rest_text = words[1] if len(words) > 1 else ''
 
         start_idx = rest_text.find("составил")
         end_idx = rest_text.find("США")
 
         if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-            before = rest_text[:start_idx + len("составил")]  # включая слово "составил"
+            before = rest_text[:start_idx + len("составил")]
             bold_part = rest_text[start_idx + len("составил"):end_idx + len("США")]
             after = rest_text[end_idx + len("США"):]
 
@@ -158,12 +164,9 @@ class TradeDocumentGenerator:
                 run_after = paragraph.add_run(after)
                 self.set_run_style(run_after)
         else:
-            # Если "составил" и "США" не найдены или в неверном порядке — просто добавить оставшийся текст
             run_rest = paragraph.add_run(rest_text)
             self.set_run_style(run_rest)
 
-
-    # Цвет фона ячейки
     def set_cell_background(self, cell, color_hex):
         tc = cell._tc
         tcPr = tc.get_or_add_tcPr()
@@ -171,20 +174,21 @@ class TradeDocumentGenerator:
         shd.set(qn('w:fill'), color_hex)
         tcPr.append(shd)
 
-    # Добавление вертикальных отступов (space above/below в ячейке)
+    def set_cell_text_color(self, cell, rgb_color):
+        for paragraph in cell.paragraphs:
+            for run in paragraph.runs:
+                run.font.color.rgb = rgb_color
+
     def add_cell_vertical_padding(self, cell, space_pts=4):
         for paragraph in cell.paragraphs:
             paragraph.paragraph_format.space_before = Pt(space_pts)
             paragraph.paragraph_format.space_after = Pt(space_pts)
 
-    # Получение доступной ширины страницы
     def get_available_page_width(self, doc):
         section = doc.sections[0]
         return section.page_width - section.left_margin - section.right_margin
 
-    # Генерация таблицы с заголовком
-    def add_summary_table(self, doc, title, table_data):
-        # Заголовок таблицы без отступа после
+    def add_summary_table(self, doc, title, table_data, modern_style):
         paragraph = doc.add_paragraph()
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         paragraph.paragraph_format.space_after = Pt(0)
@@ -197,7 +201,7 @@ class TradeDocumentGenerator:
         cols = len(table_data[0])
         table = doc.add_table(rows=rows, cols=cols)
         table.style = 'Table Grid'
-        table.alignment = WD_TABLE_ALIGNMENT.CENTER  # Центрируем таблицу
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
         for i, row in enumerate(table_data):
             for j, cell_text in enumerate(row):
@@ -209,7 +213,7 @@ class TradeDocumentGenerator:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     run = paragraph.runs[0]
                     run.font.name = 'Times New Roman'
-                    run.font.size = Pt(14)  # Уменьшаем шрифт
+                    run.font.size = Pt(14)
                     if i == 0 and j != 0:
                         run.bold = True
                     elif i == 1:
@@ -222,9 +226,16 @@ class TradeDocumentGenerator:
 
                 self.add_cell_vertical_padding(cell, space_pts=2)
 
-                if i == 0:
-                    self.set_cell_background(cell, "D9D9D9")
-
+                # change color
+                if modern_style:
+                    if i == 0:
+                        self.set_cell_background(cell, HEADER_BG)
+                        self.set_cell_text_color(cell, HEADER_TEXT)
+                    else:
+                        self.set_cell_background(cell, ROW_BG1 if i % 2 == 1 else ROW_BG2)
+                else:
+                    if i == 0:
+                        self.set_cell_background(cell, HEADER_BASIC)
 
 
     def add_import_analysis_text(self, doc, text_blocks):
@@ -242,12 +253,10 @@ class TradeDocumentGenerator:
             paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
             if i == 0:
-                # Найти первое слово
                 first_word_match = re.match(r'\S+', text)
                 first_word = first_word_match.group(0) if first_word_match else ''
                 rest_text = text[len(first_word):]
 
-                # Найти последнее число (включая формат с пробелами, запятыми и точками)
                 last_number_match = list(re.finditer(r'\d[\d\s.,]*', text))
                 if last_number_match:
                     last_number = last_number_match[-1]
@@ -258,16 +267,13 @@ class TradeDocumentGenerator:
                     middle_text = rest_text
                     end_text = ''
 
-                # Жирное первое слово
                 run_first = paragraph.add_run(first_word)
                 self.set_run_style(run_first)
                 run_first.bold = True
 
-                # Средняя часть — обычная
                 run_middle = paragraph.add_run(middle_text)
                 self.set_run_style(run_middle)
 
-                # Конец — жирный (включая последнюю цифру)
                 run_end = paragraph.add_run(end_text)
                 self.set_run_style(run_end)
                 run_end.bold = True
@@ -289,15 +295,13 @@ class TradeDocumentGenerator:
                     run.italic = True
 
 
-    def generate_export_import_table(self, doc, table_header, table_data, months, start_year, end_year, units):
+    def generate_export_import_table(self, doc, table_header, table_data, months, start_year, end_year, units, modern_style):
         if len(table_data) == 1:
             return
-        # Удаляем 10-й элемент, если есть
         for row in table_data:
             if len(row) > 9:
                 del row[9]
 
-        # --- Вспомогательные функции ---
         def merge_cells_vertically(table, col_idx, row_start, row_end):
             start_cell = table.cell(row_start, col_idx)
             for row in range(row_start + 1, row_end + 1):
@@ -308,14 +312,20 @@ class TradeDocumentGenerator:
             for col in range(col_start + 1, col_end + 1):
                 start_cell.merge(table.cell(row_idx, col))
 
-        def set_cell_background(cell, color="D9D9D9"):
+        def set_cell_background(cell, color):
             tc = cell._tc
             tcPr = tc.get_or_add_tcPr()
             shd = OxmlElement('w:shd')
             shd.set(qn('w:val'), 'clear')
             shd.set(qn('w:color'), 'auto')
             shd.set(qn('w:fill'), color)
+
             tcPr.append(shd)
+
+        def set_cell_text_color(cell, rgb_color):
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.font.color.rgb = rgb_color
 
         def center_cell(cell):
             cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
@@ -335,7 +345,6 @@ class TradeDocumentGenerator:
             tblHeader = OxmlElement('w:tblHeader')
             trPr.append(tblHeader)
 
-        # --- Добавление отступа и заголовка ---
         doc.add_paragraph().paragraph_format.space_after = 0
 
         header_paragraph = doc.add_paragraph(table_header)
@@ -346,7 +355,6 @@ class TradeDocumentGenerator:
         run.font.size = Pt(14)
         header_paragraph.paragraph_format.space_after = 0
 
-        # --- Создание таблицы ---
         table = doc.add_table(rows=2, cols=9)
         table.style = 'Table Grid'
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -360,7 +368,12 @@ class TradeDocumentGenerator:
         cell = table.cell(0, 0)
         cell.text = "Товары"
         merge_cells_vertically(table, 0, 0, 1)
-        set_cell_background(cell)
+        if modern_style:
+            set_cell_background(cell, HEADER_BG)
+            set_cell_text_color(cell, HEADER_TEXT)
+        else:
+            set_cell_background(cell, HEADER_BASIC)
+
         center_cell(cell)
         make_bold(cell)
 
@@ -368,7 +381,12 @@ class TradeDocumentGenerator:
         cell.text = f"{start_year} год" if months[-1] == 12 else f"{format_month_range(months)}\n{start_year} {'год' if months[-1] == 12 else 'года'}"
         merge_cells_horizontally(table, 0, 1, 3)
         for i in range(1, 4):
-            set_cell_background(table.cell(0, i))
+            if modern_style:
+                set_cell_background(table.cell(0, i), HEADER_BG)
+                set_cell_text_color(table.cell(0, i), HEADER_TEXT)
+            else:
+                set_cell_background(table.cell(0, i), HEADER_BASIC)
+
             center_cell(table.cell(0, i))
             make_bold(table.cell(0, i))
 
@@ -376,7 +394,12 @@ class TradeDocumentGenerator:
         cell.text = f"{end_year} год" if months[-1] == 12 else f"{format_month_range(months)}\n{end_year} {'год' if months[-1] == 12 else 'года'}"
         merge_cells_horizontally(table, 0, 4, 6)
         for i in range(4, 7):
-            set_cell_background(table.cell(0, i))
+            if modern_style:
+                set_cell_background(table.cell(0, i), HEADER_BG)
+                set_cell_text_color(table.cell(0, i), HEADER_TEXT)
+            else:
+                set_cell_background(table.cell(0, i), HEADER_BASIC)
+
             center_cell(table.cell(0, i))
             make_bold(table.cell(0, i))
 
@@ -384,7 +407,12 @@ class TradeDocumentGenerator:
         cell.text = f"Прирост\n{start_year}/{end_year}"
         merge_cells_horizontally(table, 0, 7, 8)
         for i in range(7, 9):
-            set_cell_background(table.cell(0, i))
+            if modern_style:
+                set_cell_background(table.cell(0, i), HEADER_BG)
+                set_cell_text_color(table.cell(0, i), HEADER_TEXT)
+            else:
+                set_cell_background(table.cell(0, i), HEADER_BASIC)
+
             center_cell(table.cell(0, i))
             make_bold(table.cell(0, i))
 
@@ -392,16 +420,22 @@ class TradeDocumentGenerator:
         for i in range(8):
             cell = table.cell(1, i + 1)
             cell.text = headers[i]
-            set_cell_background(cell)
+
+            if modern_style:
+                set_cell_background(cell, HEADER_BG)
+                set_cell_text_color(cell, HEADER_TEXT)
+            else:
+                set_cell_background(cell, HEADER_BASIC)
+
             center_cell(cell)
             make_bold(cell)
 
-        # --- Добавление данных ---
+        # Данные
         for i, row_data in enumerate(table_data):
             row = table.add_row().cells
             for col, val in enumerate(row_data):
                 cell = row[col]
-                cell.text = str(val) #???
+                cell.text = str(val)
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
                 for paragraph in cell.paragraphs:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -414,36 +448,35 @@ class TradeDocumentGenerator:
                     if i == 0:
                         run.bold = True
                     else:
-                        if col in [2, 5]:  # 2 и 5 столбец — жирный
+                        if col in [2, 5]:
                             run.bold = True
-                        if col in [1, 4]:  # 3 и 6 столбец — курсив
+                        if col in [1, 4]:
                             run.italic = True
 
-                    # Раскраска значений в 7 и 8 столбце — работает всегда
                     if col in [7, 8]:
                         if val.strip().lower() == "new":
-                            run.font.color.rgb = RGBColor(0, 176, 80)  # зелёный
+                            run.font.color.rgb = RGBColor(0, 176, 80)
                         elif val.strip().startswith("-"):
-                            run.font.color.rgb = RGBColor(255, 0, 0)  # красный
+                            run.font.color.rgb = RGBColor(255, 0, 0)
+
+                if modern_style:
+                    self.set_cell_background(cell, ROW_BG1 if (i + 2) % 2 == 1 else ROW_BG2)
 
 
-    def add_country_table(self, doc, data, header, units, table_type):
-        # ======= Заголовок таблицы =======
+    def add_country_table(self, doc, data, header, units, table_type, modern_style):
         paragraph = doc.add_paragraph()
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         paragraph.paragraph_format.space_after = Pt(0)
-        paragraph.paragraph_format.space_before = Pt(12)  # Добавляем небольшой отступ сверху
+        paragraph.paragraph_format.space_before = Pt(12)
         self.format_paragraph(paragraph, first_line_indent=False)
         run = paragraph.add_run(header)
         run.italic = True
         self.set_run_style(run)
 
-        # ======= Таблица =======
         table = doc.add_table(rows=2 + len(data), cols=8)
         table.style = 'Table Grid'
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
-        # ======= Первая строка заголовка =======
         header_row_1 = table.rows[0].cells
         header_row_1[0].text = '№'
         if table_type == "region":
@@ -453,7 +486,6 @@ class TradeDocumentGenerator:
         header_row_1[2].text = f'Стоимость, {units}'
         header_row_1[5].text = 'Доля'
 
-        # ======= Вторая строка заголовка =======
         header_row_2 = table.rows[1].cells
         header_row_2[2].text = 'ТО'
         header_row_2[3].text = 'Экспорт'
@@ -462,7 +494,6 @@ class TradeDocumentGenerator:
         header_row_2[6].text = 'Экспорт'
         header_row_2[7].text = 'Импорт'
 
-        # ======= Объединение ячеек =======
         def merge_horizontally(row, start_idx, end_idx):
             start_cell = row.cells[start_idx]
             for idx in range(start_idx + 1, end_idx + 1):
@@ -473,30 +504,33 @@ class TradeDocumentGenerator:
             for row_idx in range(start_row_idx + 1, end_row_idx + 1):
                 start_cell.merge(table.cell(row_idx, col_idx))
 
-        merge_vertically(table, 0, 0, 1)  # №
-        merge_vertically(table, 1, 0, 1)  # Страны
+        merge_vertically(table, 0, 0, 1)
+        merge_vertically(table, 1, 0, 1)
         merge_horizontally(table.rows[0], 2, 4)
         merge_horizontally(table.rows[0], 5, 7)
 
-        # ======= Заливка заголовков =======
+        # Заливка заголовков
         for row in [table.rows[0], table.rows[1]]:
             for cell in row.cells:
-                self.set_cell_background(cell, "D9D9D9")
+                if modern_style:
+                    self.set_cell_background(cell, HEADER_BG)
+                    self.set_cell_text_color(cell, HEADER_TEXT)
+                else:
+                    self.set_cell_background(cell, HEADER_BASIC)
+
                 for paragraph in cell.paragraphs:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     run = paragraph.runs[0]
                     run.font.bold = True
                     run.font.name = 'Times New Roman'
-                    run.font.size = Pt(12)  # шрифт заголовков
+                    run.font.size = Pt(12)
                     paragraph.paragraph_format.space_before = Pt(2)
                     paragraph.paragraph_format.space_after = Pt(2)
 
-        # ======= Ширина столбцов =======
         for row in table.rows:
             row.cells[0].width = Cm(1)
             row.cells[1].width = Cm(3)
 
-        # ======= Данные =======
         for row_idx, row_data in enumerate(data, start=2):
             row_cells = table.rows[row_idx].cells
             for col_idx, value in enumerate(row_data):
@@ -506,14 +540,17 @@ class TradeDocumentGenerator:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     run = paragraph.runs[0]
                     run.font.name = 'Times New Roman'
-                    run.font.size = Pt(12)  # шрифт данных
+                    run.font.size = Pt(12)
                     if row_idx == 2:
                         run.bold = True
                     paragraph.paragraph_format.space_before = Pt(2)
                     paragraph.paragraph_format.space_after = Pt(2)
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
 
-        # ======= Центрируем текст во всех ячейках =======
+                # Чередование цвета строк
+                if modern_style:
+                    self.set_cell_background(cell, ROW_BG1 if row_idx % 2 == 1 else ROW_BG2)
+
         for row in table.rows:
             for cell in row.cells:
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
@@ -523,7 +560,7 @@ class TradeDocumentGenerator:
                     paragraph.paragraph_format.space_after = Pt(2)
 
 
-    def generate_trade_dynamics_table(self, doc, table_data, year=None):
+    def generate_trade_dynamics_table(self, doc, table_data, modern_style, year=None):
         if not table_data or len(table_data) < 2:
             return
 
@@ -568,8 +605,16 @@ class TradeDocumentGenerator:
                     elif i == 1:
                         run.bold = True
 
-                if i == 0:
-                    self.set_cell_background(cell, "D9D9D9")
+                # change color
+                if modern_style:
+                    if i == 0:
+                        self.set_cell_background(cell, HEADER_BG)
+                        self.set_cell_text_color(cell, HEADER_TEXT)
+                    else:
+                        self.set_cell_background(cell, ROW_BG1 if i % 2 == 1 else ROW_BG2)
+                else:
+                    if i == 0:
+                        self.set_cell_background(cell, HEADER_BASIC)
 
                 self.add_cell_vertical_padding(cell, space_pts=2)
 
