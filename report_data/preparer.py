@@ -251,23 +251,6 @@ class TradeDataPreparer:
             main_table_divider,
             main_table_measure
         )
-        data_for_doc["import_text_points"] = textDataPreparer.gen_text_flow_points(
-            "import",
-            self.start_year,
-            self.end_year,
-            months,
-            table_data_import,
-            table_data_import_reverse,
-            import_data_sum,
-            self.region,
-            self.country_or_group,
-            self.exclude_tn_veds,
-            self.text_size,
-            main_table_divider,
-            main_table_measure,
-            True
-        )
-        print(data_for_doc["import_text_points"])
 
         data_for_doc["export_text"] = textDataPreparer.gen_text_flow(
             "export",
@@ -284,24 +267,6 @@ class TradeDataPreparer:
             main_table_divider,
             main_table_measure
         )
-
-        data_for_doc["import_text_points"] = textDataPreparer.gen_text_flow_points(
-            "export",
-            self.start_year,
-            self.end_year,
-            months,
-            table_data_export,
-            table_data_export_reverse,
-            export_data_sum,
-            self.region,
-            self.country_or_group,
-            self.exclude_tn_veds,
-            self.text_size,
-            main_table_divider,
-            main_table_measure,
-            True
-        )
-        print(data_for_doc["import_text_points"])
 
         data_for_doc["months"] = months
         data_for_doc["start_year"] = self.start_year
