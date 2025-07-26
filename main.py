@@ -19,6 +19,7 @@ def main():
     table_size = int(os.getenv("TABLE_SIZE")) or 25
     country_table_size = int(os.getenv("COUNTRY_TABLE_SIZE")) or 15
     exclude_raw = os.getenv("EXCLUDE_TN_VEDS") or ""
+    change_color = int(os.getenv("CHANGE_COLOR")) or 0
     long_report = int(os.getenv("LONG_REPORT")) or 0
     exclude_tn_veds = [item.strip() for item in exclude_raw.split(",") if item.strip()]
 
@@ -57,7 +58,8 @@ def main():
         country_table_size,
         exclude_tn_veds,
         month_range,
-        long_report
+        long_report,
+        change_color
     )
     
     data_for_doc = tradeDataPreparer.prepare()

@@ -34,7 +34,7 @@ class TradeDocumentGenerator:
         section.left_margin = Inches(3 / 2.54)
         section.right_margin = Inches(1.5 / 2.54)
 
-        modern_style = False
+        change_color = self.prepared_data["change_color"]
 
         args = [doc, self.prepared_data["document_header"]]
         if "category_description" in self.prepared_data:
@@ -42,13 +42,13 @@ class TradeDocumentGenerator:
 
         self.add_document_header(*args)
         self.add_summary_paragraph(doc, self.prepared_data["summary_text"])
-        self.add_summary_table(doc, self.prepared_data["summary_header"], self.prepared_data["summary_table"], modern_style)
+        self.add_summary_table(doc, self.prepared_data["summary_header"], self.prepared_data["summary_table"], change_color)
 
         if self.prepared_data.get("trade_dynamics_table"):
-            self.generate_trade_dynamics_table(doc, self.prepared_data["trade_dynamics_table"], modern_style)
+            self.generate_trade_dynamics_table(doc, self.prepared_data["trade_dynamics_table"], change_color)
 
         if self.prepared_data.get("months_table_data"):
-            self.generate_trade_dynamics_table(doc, self.prepared_data["months_table_data"], modern_style, self.prepared_data["end_year"])
+            self.generate_trade_dynamics_table(doc, self.prepared_data["months_table_data"], change_color, self.prepared_data["end_year"])
 
         if self.prepared_data.get("country_table_data"):
             self.add_country_table(
@@ -57,7 +57,7 @@ class TradeDocumentGenerator:
                 self.prepared_data["country_table_header"],
                 self.prepared_data["country_table_units"],
                 "country",
-                modern_style
+                change_color
             )
 
         if self.prepared_data.get("region_table_data"):
@@ -67,7 +67,7 @@ class TradeDocumentGenerator:
                 self.prepared_data["region_table_header"],
                 self.prepared_data["region_table_units"],
                 "region",
-                modern_style
+                change_color
             ) 
 
         if self.prepared_data["summary_table"][1][2] == "0,0":
@@ -84,7 +84,7 @@ class TradeDocumentGenerator:
             self.prepared_data["start_year"],
             self.prepared_data["end_year"],
             self.prepared_data["export_table_measure"],
-            modern_style
+            change_color
         )
         self.generate_export_import_table(
             doc,
@@ -94,7 +94,7 @@ class TradeDocumentGenerator:
             self.prepared_data["start_year"],
             self.prepared_data["end_year"],
             self.prepared_data["import_table_measure"],
-            modern_style
+            change_color
         )
 
         return doc, self.prepared_data["filename"], self.prepared_data["short_filename"]
@@ -188,7 +188,7 @@ class TradeDocumentGenerator:
         section = doc.sections[0]
         return section.page_width - section.left_margin - section.right_margin
 
-    def add_summary_table(self, doc, title, table_data, modern_style):
+    def add_summary_table(self, doc, title, table_data, change_color):
         paragraph = doc.add_paragraph()
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         paragraph.paragraph_format.space_after = Pt(0)
@@ -227,7 +227,7 @@ class TradeDocumentGenerator:
                 self.add_cell_vertical_padding(cell, space_pts=2)
 
                 # change color
-                if modern_style:
+                if change_color:
                     if i == 0:
                         self.set_cell_background(cell, HEADER_BG)
                         self.set_cell_text_color(cell, HEADER_TEXT)
@@ -295,7 +295,7 @@ class TradeDocumentGenerator:
                     run.italic = True
 
 
-    def generate_export_import_table(self, doc, table_header, table_data, months, start_year, end_year, units, modern_style):
+    def generate_export_import_table(self, doc, table_header, table_data, months, start_year, end_year, units, change_color):
         if len(table_data) == 1:
             return
         for row in table_data:
@@ -368,7 +368,7 @@ class TradeDocumentGenerator:
         cell = table.cell(0, 0)
         cell.text = "Товары"
         merge_cells_vertically(table, 0, 0, 1)
-        if modern_style:
+        if change_color:
             set_cell_background(cell, HEADER_BG)
             set_cell_text_color(cell, HEADER_TEXT)
         else:
@@ -381,7 +381,7 @@ class TradeDocumentGenerator:
         cell.text = f"{start_year} год" if months[-1] == 12 else f"{format_month_range(months)}\n{start_year} {'год' if months[-1] == 12 else 'года'}"
         merge_cells_horizontally(table, 0, 1, 3)
         for i in range(1, 4):
-            if modern_style:
+            if change_color:
                 set_cell_background(table.cell(0, i), HEADER_BG)
                 set_cell_text_color(table.cell(0, i), HEADER_TEXT)
             else:
@@ -394,7 +394,7 @@ class TradeDocumentGenerator:
         cell.text = f"{end_year} год" if months[-1] == 12 else f"{format_month_range(months)}\n{end_year} {'год' if months[-1] == 12 else 'года'}"
         merge_cells_horizontally(table, 0, 4, 6)
         for i in range(4, 7):
-            if modern_style:
+            if change_color:
                 set_cell_background(table.cell(0, i), HEADER_BG)
                 set_cell_text_color(table.cell(0, i), HEADER_TEXT)
             else:
@@ -407,7 +407,7 @@ class TradeDocumentGenerator:
         cell.text = f"Прирост\n{start_year}/{end_year}"
         merge_cells_horizontally(table, 0, 7, 8)
         for i in range(7, 9):
-            if modern_style:
+            if change_color:
                 set_cell_background(table.cell(0, i), HEADER_BG)
                 set_cell_text_color(table.cell(0, i), HEADER_TEXT)
             else:
@@ -421,7 +421,7 @@ class TradeDocumentGenerator:
             cell = table.cell(1, i + 1)
             cell.text = headers[i]
 
-            if modern_style:
+            if change_color:
                 set_cell_background(cell, HEADER_BG)
                 set_cell_text_color(cell, HEADER_TEXT)
             else:
@@ -459,11 +459,11 @@ class TradeDocumentGenerator:
                         elif val.strip().startswith("-"):
                             run.font.color.rgb = RGBColor(255, 0, 0)
 
-                if modern_style:
+                if change_color:
                     self.set_cell_background(cell, ROW_BG1 if (i + 2) % 2 == 1 else ROW_BG2)
 
 
-    def add_country_table(self, doc, data, header, units, table_type, modern_style):
+    def add_country_table(self, doc, data, header, units, table_type, change_color):
         paragraph = doc.add_paragraph()
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         paragraph.paragraph_format.space_after = Pt(0)
@@ -512,7 +512,7 @@ class TradeDocumentGenerator:
         # Заливка заголовков
         for row in [table.rows[0], table.rows[1]]:
             for cell in row.cells:
-                if modern_style:
+                if change_color:
                     self.set_cell_background(cell, HEADER_BG)
                     self.set_cell_text_color(cell, HEADER_TEXT)
                 else:
@@ -548,7 +548,7 @@ class TradeDocumentGenerator:
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
 
                 # Чередование цвета строк
-                if modern_style:
+                if change_color:
                     self.set_cell_background(cell, ROW_BG1 if row_idx % 2 == 1 else ROW_BG2)
 
         for row in table.rows:
@@ -560,7 +560,7 @@ class TradeDocumentGenerator:
                     paragraph.paragraph_format.space_after = Pt(2)
 
 
-    def generate_trade_dynamics_table(self, doc, table_data, modern_style, year=None):
+    def generate_trade_dynamics_table(self, doc, table_data, change_color, year=None):
         if not table_data or len(table_data) < 2:
             return
 
@@ -606,7 +606,7 @@ class TradeDocumentGenerator:
                         run.bold = True
 
                 # change color
-                if modern_style:
+                if change_color:
                     if i == 0:
                         self.set_cell_background(cell, HEADER_BG)
                         self.set_cell_text_color(cell, HEADER_TEXT)

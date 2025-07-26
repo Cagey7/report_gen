@@ -10,7 +10,7 @@ from utils.utils import *
 
 
 class TradeDataPreparer:
-    def __init__(self, conn, region, country_or_group, start_year, end_year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range, long_report):
+    def __init__(self, conn, region, country_or_group, start_year, end_year, digit, category, text_size, table_size, country_table_size, exclude_tn_veds, month_range, long_report, change_color):
         self.conn = conn
         self.region = region
         self.country_or_group = country_or_group
@@ -24,6 +24,7 @@ class TradeDataPreparer:
         self.exclude_tn_veds = exclude_tn_veds
         self.month_range = month_range
         self.long_report = long_report
+        self.change_color = change_color
         
 
     def prepare(self):
@@ -269,6 +270,7 @@ class TradeDataPreparer:
         )
 
         data_for_doc["months"] = months
+        data_for_doc["change_color"] = self.change_color
         data_for_doc["start_year"] = self.start_year
         data_for_doc["end_year"] = self.end_year
         data_for_doc["export_table_measure"] = export_table_measure
